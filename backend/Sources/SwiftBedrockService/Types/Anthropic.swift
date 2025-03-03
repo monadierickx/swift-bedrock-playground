@@ -4,19 +4,19 @@ import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
 
-public struct AntropicRequest: BedrockRequest {
+public struct AnthropicRequest: BedrockRequest {
     let modelId: String
     let contentType: String = "application/json"
     let accept: String = "application/json"
-    let body: AntropicBody
+    let body: AnthropicBody
 
-    init(modelId: String, prompt: String, maxTokens: Int? = 300, temperature: Double = 0.6) {
+    init(modelId: String, prompt: String, maxTokens: Int? = 300, temperature: Double? = 0.6) {
         self.modelId = modelId
-        self.body = AntropicBody(
+        self.body = AnthropicBody(
             maxTokens: maxTokens ?? 300,
             temperature: temperature ?? 0.6,
             messages: [
-                AntropicMessage(role: .user, content: [AntropicContent(text: prompt)])
+                AnthropicMessage(role: .user, content: [AnthropicContent(text: prompt)])
             ])
     }
 
@@ -37,7 +37,7 @@ public struct AntropicRequest: BedrockRequest {
         //     // contentType: self.contentType,
         //     contentType: "application/json",
         //     modelId: self.modelId)
-        
+
         // FIXME
         let messages = """
             [
@@ -67,19 +67,19 @@ public struct AntropicRequest: BedrockRequest {
             modelId: modelId)
     }
 
-    public struct AntropicBody: Codable {
+    public struct AnthropicBody: Codable {
         let anthropicVersion: String = "bedrock-2023-05-31"
         let maxTokens: Int
         let temperature: Double
-        let messages: [AntropicMessage]
+        let messages: [AnthropicMessage]
     }
 
-    public struct AntropicMessage: Codable {
-        let role: role
-        let content: [AntropicContent]
+    public struct AnthropicMessage: Codable {
+        let role: Role
+        let content: [AnthropicContent]
     }
 
-    public struct AntropicContent: Codable {
+    public struct AnthropicContent: Codable {
         let type: String = "text"
         let text: String
     }
@@ -113,6 +113,6 @@ struct AnthropicResponse: Decodable {
     }
 
     func getTextCompletion() -> TextCompletion {
-        return TextCompletion(self.content[0].text!)
+        return TextCompletion(self.content[0].text!) // FIXME
     }
 }

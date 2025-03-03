@@ -50,7 +50,7 @@ public struct SwiftBedrock: Sendable {
         return modelsInfo
     }
 
-    private func AntropicTextCompletion(
+    private func AnthropicTextCompletion(
         model: BedrockModel, prompt: String, maxTokens: Int, temperature: Double
     )
         async throws -> TextCompletion
@@ -58,12 +58,44 @@ public struct SwiftBedrock: Sendable {
         let modelId = model.rawValue
         let runtimeClient = try await configureBedrockRuntimeClient()
 
-        let antropicRequest = AntropicRequest(modelId: modelId, prompt: prompt)
-        let input: InvokeModelInput = antropicRequest.getInvokeModelInput()
+        let anthropicRequest = AnthropicRequest(modelId: modelId, prompt: prompt)
+        let input: InvokeModelInput = anthropicRequest.getInvokeModelInput()
         let response = try await runtimeClient.invokeModel(
             input: input)
-        let anthropicResponse = try AnthropicResponse(from: response.body!)  //FIXME
+        let anthropicResponse = try AnthropicResponse(from: response.body!)  // FIXME
         return anthropicResponse.getTextCompletion()
+    }
+
+    private func TitanTextCompletion(
+        model: BedrockModel, prompt: String, maxTokens: Int, temperature: Double
+    )
+        async throws -> TextCompletion
+    {
+        let modelId = model.rawValue
+        let runtimeClient = try await configureBedrockRuntimeClient()
+
+        let titanRequest = TitanRequest(modelId: modelId, prompt: prompt)
+        let input: InvokeModelInput = titanRequest.getInvokeModelInput()
+        let response = try await runtimeClient.invokeModel(
+            input: input)
+        let titanResponse = try TitanResponse(from: response.body!)  // FIXME
+        return titanResponse.getTextCompletion()
+    }
+
+    private func NovaTextCompletion(
+        model: BedrockModel, prompt: String, maxTokens: Int, temperature: Double
+    )
+        async throws -> TextCompletion
+    {
+        let modelId = model.rawValue
+        let runtimeClient = try await configureBedrockRuntimeClient()
+
+        let novaRequest = NovaRequest(modelId: modelId, prompt: prompt)
+        let input: InvokeModelInput = novaRequest.getInvokeModelInput()
+        let response = try await runtimeClient.invokeModel(
+            input: input)
+        let novaResponse = try NovaResponse(from: response.body!)  // FIXME
+        return novaResponse.getTextCompletion()
     }
 
     public func completeText(
@@ -71,14 +103,20 @@ public struct SwiftBedrock: Sendable {
     ) async throws -> TextCompletion {
         let maxTokens = maxTokens ?? 300
         let temperature = temperature ?? 0.6
-        switch model {
-        case .claudev3_haiku:
-            return try await AntropicTextCompletion(
+
+        if model.isAnthropic() {
+            return try await AnthropicTextCompletion(
                 model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
-        default:
-            // throw BedrockError.unknownModel
+        } else if model.isTitan() {
+            return try await TitanTextCompletion(
+                model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
+        } else if model.isNova() {
+            print("NOVA")
+            return try await NovaTextCompletion(
+                model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
+        } else {
+            // FIXME: throw BedrockError.unknownModel
             return TextCompletion("Model not implemented")
         }
-        return TextCompletion("completion!! \(text), \(model), \(maxTokens), \(temperature)")
     }
 }

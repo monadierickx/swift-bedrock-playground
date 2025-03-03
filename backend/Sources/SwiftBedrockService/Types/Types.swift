@@ -12,14 +12,14 @@ public struct TextCompletion: Codable {
     public init(_ completion: String) {
         self.completion = completion
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         completion = try container.decode(String.self, forKey: .completion)
     }
 }
 
-enum role: String, Codable {
+enum Role: String, Codable {
     case user
     case assistant
 }
