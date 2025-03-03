@@ -11,15 +11,28 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
+        .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.25"),
+        .package(url: "https://github.com/smithy-lang/smithy-swift", from: "0.118.0"),
     ],
     targets: [
         .executableTarget(name: "App",
             dependencies: [
+                .target(name: "SwiftBedrockService"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
             ],
             path: "Sources/App"
+        ),
+        .target(
+            name: "SwiftBedrockService",
+            dependencies: [
+                .product(name: "AWSClientRuntime", package: "aws-sdk-swift"),
+                .product(name: "AWSBedrock", package: "aws-sdk-swift"),
+                .product(name: "AWSBedrockRuntime", package: "aws-sdk-swift"),
+                .product(name: "Smithy", package: "smithy-swift"),
+            ],
+            path: "Sources/SwiftBedrockService"
         ),
         .testTarget(name: "AppTests",
             dependencies: [
@@ -27,6 +40,6 @@ let package = Package(
                 .product(name: "HummingbirdTesting", package: "hummingbird")
             ],
             path: "Tests/AppTests"
-        )
+        ),
     ]
 )

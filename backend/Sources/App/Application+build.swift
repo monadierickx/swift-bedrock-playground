@@ -1,5 +1,6 @@
 import Hummingbird
 import Logging
+import SwiftBedrockService
 
 /// Application arguments protocol. We use a protocol so we can call
 /// `buildApplication` inside Tests as well as in the App executable.
@@ -43,6 +44,10 @@ public func buildApplication(_ arguments: some AppArguments) async throws
 /// Build router
 func buildRouter() -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
+
+    // CORS
+    router.add(middleware: CORSMiddleware())
+
     // Add middleware
     router.addMiddleware {
         // logging middleware
@@ -59,9 +64,10 @@ func buildRouter() -> Router<AppRequestContext> {
     }
 
     // List models
+    let bedrock = SwiftBedrock()
     // GET /foundation-models lists all models
     router.get("foundation-models") { request, _ -> [ModelInfo] in
-        return await listModels()
+        return try await bedrock.listModels()
     }
 
     return router
