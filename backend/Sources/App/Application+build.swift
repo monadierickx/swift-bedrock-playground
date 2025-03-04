@@ -77,7 +77,7 @@ func buildRouter() -> Router<AppRequestContext> {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")  // add modelId
             }
             // check for nil
-            let model = BedrockModel(rawValue: modelId)
+            let model = BedrockModel(modelId)
             let input = try await request.decode(as: TextCompletionInput.self, context: context)
             return try await bedrock.completeText(
                 input.prompt,

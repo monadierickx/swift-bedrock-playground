@@ -1,55 +1,18 @@
+import Foundation
 
-
-// public struct AnthropicRequest: BedrockRequest {
-//     // let modelId: String
-//     // let contentType: String
-//     // let accept: String
-//     let body: AnthropicBody
-
-//     public init(modelId: String, prompt: String, maxTokens: Int? = 300, temperature: Double? = 0.6)
-//     {
-//         self.modelId = modelId
-//         self.contentType = "application/json"
-//         self.accept = "application/json"
-//         self.body = AnthropicBody(
-//             maxTokens: maxTokens ?? 300,
-//             temperature: temperature ?? 0.6,
-//             messages: [
-//                 AnthropicMessage(role: .user, content: [AnthropicContent(text: prompt)])
-//             ])
-//     }
-
-// public func getInvokeModelInput(body: Codable) -> InvokeModelInput {
-//     do {
-//         let jsonData: Data = try JSONEncoder().encode(body)
-//         return InvokeModelInput(
-//             accept: accept,
-//             body: jsonData,
-//             contentType: contentType,
-//             modelId: modelId)
-//     } catch {
-//         print("Encoding error: \(error)")
-//         fatalError()  // FIXME
-//     }
-// }
-
-// public func getBody() -> Codable {
-//     return self.body
-// }
-
-public struct AnthropicBody: Codable {
+public struct AnthropicRequestBody: Codable {
     let anthropic_version: String
     let max_tokens: Int
     let temperature: Double
     let messages: [AnthropicMessage]
 
-    // FIXME: nice init 
-
-    init(maxTokens: Int, temperature: Double, messages: [AnthropicMessage]) {
+    public init(prompt: String, maxTokens: Int, temperature: Double) {
         self.anthropic_version = "bedrock-2023-05-31"
         self.max_tokens = maxTokens
         self.temperature = temperature
-        self.messages = messages
+        self.messages = [
+            AnthropicMessage(role: .user, content: [AnthropicContent(text: prompt)])
+        ]
     }
 
     public struct AnthropicMessage: Codable {
@@ -68,9 +31,7 @@ public struct AnthropicBody: Codable {
     }
 }
 
-// }
-
-struct AnthropicResponse: BedrockResponse {
+struct AnthropicResponseBody: ContainsTextCompletion {
     let id: String
     let type: String
     let role: String
@@ -80,23 +41,23 @@ struct AnthropicResponse: BedrockResponse {
     let stop_sequence: String?
     let usage: Usage
 
-    struct Content: Decodable {
+    private init(from data: Data) throws {
+        let decoder = JSONDecoder()
+        self = try decoder.decode(AnthropicResponseBody.self, from: data)
+    }
+
+    public func getTextCompletion() -> TextCompletion {
+        return TextCompletion(self.content[0].text!)  // FIXME
+    }
+
+    struct Content: Codable {
         let type: String
         let text: String?
         let thinking: String?
     }
 
-    struct Usage: Decodable {
+    struct Usage: Codable {
         let input_tokens: Int
         let output_tokens: Int
-    }
-
-    public init(from data: Data) throws {
-        let decoder = JSONDecoder()
-        self = try decoder.decode(AnthropicResponse.self, from: data)
-    }
-
-    func getTextCompletion() -> TextCompletion {
-        return TextCompletion(self.content[0].text!)  // FIXME
     }
 }
