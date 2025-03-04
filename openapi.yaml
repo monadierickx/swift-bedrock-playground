@@ -32,21 +32,22 @@ components:
 #           type: string
 
 paths:
-  /hello:
+  /:
+    get:
+      responses:
+        '200':
+          description: Status ok, without message
+  
+  /health:
     get:
       operationId: greet
       responses:
-        '200': # When the request is successful
-          description: A hello message
+        '200':
+          description: An 'I am healthy!' message
           content:
             application/json:
-              schema: # The returned JSON object
-                type: object
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
+              schema:
+                type: string
 
   /foundation-models:
     get:
@@ -66,7 +67,7 @@ paths:
         '500':
           description: Internal server error
 
-  # /foundation-models/model/{model_id}:
+  # /foundation-models/{model_id}:
   #   get:
   #     summary: Get a specific model by ID
   #     parameters:
@@ -87,9 +88,8 @@ paths:
   #       '500':
   #         description: Internal server error
 
-  /foundation-models/model/text/{modelId}/invoke:
-    post:
-      operationId: generateText
+  /foundation-models/text/{modelId}:
+    get:
       summary: Invoke a specific text generation model by ID
       parameters:
         - name: modelId
@@ -110,12 +110,6 @@ paths:
                   type: number
                 maxTokens: 
                   type: integer
-      # headers:
-      #   Content-Type:
-      #     schema:
-      #       type: string
-      #       enum: ['application/json']
-      #     required: true
       responses:
         '200':
           description: Successful operation
@@ -131,8 +125,8 @@ paths:
         '500':
           description: Internal server error
 
-  /foundation-models/model/chat/{modelId}/invoke: # currently only for one model
-    post:
+  /foundation-models/chat/{modelId}/: 
+    get:
       summary: Chat with a specific model.
       operationId: chatWithModel
       parameters:
@@ -153,12 +147,6 @@ paths:
                   description: The conversation history and new message formatted as a string.
               required:
                 - prompt
-      # headers:
-      #   Content-Type:
-      #     schema:
-      #       type: string
-      #       enum: ['application/json']
-      #     required: true
       responses:
         '200':
           description: Successful response

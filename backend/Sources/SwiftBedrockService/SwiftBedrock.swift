@@ -5,9 +5,11 @@ import AWSSDKIdentity
 import Foundation
 
 public struct SwiftBedrock: Sendable {
-    var region = "us-east-1"  // FIXME
+    var region: String
 
-    public init() {}
+    public init(region: String = "us-east-1") {
+        self.region = region
+    }
 
     // TODO getBedrockConfig -> T and getBedrockClient() -> T
     private func configureBedrockRuntimeClient() async throws -> BedrockRuntimeClient {
@@ -50,18 +52,6 @@ public struct SwiftBedrock: Sendable {
         return modelsInfo
     }
 
-    // private func textCompletion(request: BedrockRequestBody, model: BedrockModel) async throws
-    //     -> BedrockResponseBody
-    // {
-    //     let runtimeClient = try await configureBedrockRuntimeClient()
-
-    //     let input: InvokeModelInput = request.getInvokeModelInput()
-
-    //     let response = try await runtimeClient.invokeModel(input: input)
-    //     // return try .init(from: response.body!)
-    //     return try BedrockResponseBody(body: response.body!, model: model)  // FIXME: guard
-    // }
-
     /// Generates a text completion using a specified model.
     /// - Parameters:
     ///   - text: the text to be completed
@@ -75,22 +65,22 @@ public struct SwiftBedrock: Sendable {
     ) async throws -> TextCompletion {
         let maxTokens = maxTokens ?? 300
         guard maxTokens >= 1 else {
-            throw BedrockError.invalidMaxTokens("MaxTokens should be at least 1. MaxTokens: \(maxTokens)")
+            throw SwiftBedrockError.invalidMaxTokens("MaxTokens should be at least 1. MaxTokens: \(maxTokens)")
         }
 
         let temperature = temperature ?? 0.6
         guard temperature >= 0 && temperature <= 1 else {
-            throw BedrockError.invalidTemperature(
+            throw SwiftBedrockError.invalidTemperature(
                 "Temperature should be a value between 0 and 1. Temperature: \(temperature)")
         }
 
         let request: BedrockRequestBody = try BedrockRequestBody(
             model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
         let runtimeClient = try await configureBedrockRuntimeClient()
-        let input: InvokeModelInput = request.getInvokeModelInput()
+        let input: InvokeModelInput = try request.getInvokeModelInput()
         let response = try await runtimeClient.invokeModel(input: input)
         let bedrockResponseBody: BedrockResponseBody = try BedrockResponseBody(
             body: response.body!, model: model)  // FIXME: guard
-        return bedrockResponseBody.getTextCompletion()
+        return try bedrockResponseBody.getTextCompletion()
     }
 }

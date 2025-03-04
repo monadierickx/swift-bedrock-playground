@@ -1,11 +1,5 @@
 import Foundation
 
-public struct ModelInfo: Codable {
-    let modelName: String
-    let providerName: String
-    let modelId: String
-}
-
 public struct TextCompletion: Codable {
     let completion: String
 
@@ -18,5 +12,3 @@ public struct TextCompletion: Codable {
         completion = try container.decode(String.self, forKey: .completion)
     }
 }
-
-

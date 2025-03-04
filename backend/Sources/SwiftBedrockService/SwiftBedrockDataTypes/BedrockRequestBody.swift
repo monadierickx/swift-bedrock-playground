@@ -1,7 +1,4 @@
-@preconcurrency import AWSBedrock
 @preconcurrency import AWSBedrockRuntime
-import AWSClientRuntime
-import AWSSDKIdentity
 import Foundation
 
 struct BedrockRequestBody {
@@ -20,23 +17,28 @@ struct BedrockRequestBody {
         self.accept = accept
     }
 
-    public init(model: BedrockModel, prompt: String, maxTokens: Int = 300, temperature: Double = 0.6) throws {
+    public init(
+        model: BedrockModel, prompt: String, maxTokens: Int = 300, temperature: Double = 0.6
+    ) throws {
         self.model = model
         self.contentType = "application/json"
         self.accept = "application/json"
         switch model.family {
-            case .anthropic:
-                self.body = AnthropicRequestBody(prompt: prompt, maxTokens: maxTokens, temperature: temperature)
-            case .titan:
-                self.body = TitanRequestBody(prompt: prompt, maxTokens: maxTokens, temperature: temperature)
-            case .nova:
-                self.body = NovaRequestBody(prompt: prompt, maxTokens: maxTokens, temperature: temperature)
-            default:
-                throw BedrockError.invalidModel(model.rawValue)
+        case .anthropic:
+            self.body = AnthropicRequestBody(
+                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+        case .titan:
+            self.body = TitanRequestBody(
+                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+        case .nova:
+            self.body = NovaRequestBody(
+                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+        default:
+            throw SwiftBedrockError.invalidModel(model.rawValue)
         }
     }
 
-    func getInvokeModelInput() -> InvokeModelInput {
+    public func getInvokeModelInput() throws -> InvokeModelInput {
         do {
             let jsonData: Data = try JSONEncoder().encode(self.body)  // FIXME
             return InvokeModelInput(
@@ -45,8 +47,9 @@ struct BedrockRequestBody {
                 contentType: self.contentType,
                 modelId: model.rawValue)
         } catch {
-            print("Encoding error: \(error)")
-            fatalError()  // FIXME
+            throw SwiftBedrockError.encodingError(
+                "Something went wrong while encoding the request body to JSON for InvokeModelInput: \(error)"
+            )
         }
     }
 

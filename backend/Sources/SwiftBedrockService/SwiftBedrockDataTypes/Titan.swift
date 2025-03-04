@@ -25,7 +25,7 @@ struct TitanResponseBody: ContainsTextCompletion {
         self = try decoder.decode(TitanResponseBody.self, from: data)
     }
 
-    func getTextCompletion() -> TextCompletion {
+    func getTextCompletion() throws -> TextCompletion {
         return TextCompletion(results[0].outputText)
     }
 

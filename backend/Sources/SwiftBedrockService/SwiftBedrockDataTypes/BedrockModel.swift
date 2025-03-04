@@ -1,7 +1,5 @@
 import Foundation
 
-// model enum
-
 public struct BedrockModel: Equatable, Hashable, Sendable { // RawRepresentable, 
     public var rawValue: String
     let family: ModelFamily

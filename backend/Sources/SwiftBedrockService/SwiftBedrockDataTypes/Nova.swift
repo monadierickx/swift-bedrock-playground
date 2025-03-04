@@ -33,7 +33,7 @@ struct NovaResponseBody: ContainsTextCompletion {
         self = try decoder.decode(NovaResponseBody.self, from: data)
     }
 
-    public func getTextCompletion() -> TextCompletion {
+    public func getTextCompletion() throws -> TextCompletion {
         return TextCompletion(output.message.content[0].text)
     }
 

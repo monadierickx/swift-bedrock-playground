@@ -46,8 +46,11 @@ struct AnthropicResponseBody: ContainsTextCompletion {
         self = try decoder.decode(AnthropicResponseBody.self, from: data)
     }
 
-    public func getTextCompletion() -> TextCompletion {
-        return TextCompletion(self.content[0].text!)  // FIXME
+    public func getTextCompletion() throws -> TextCompletion {
+        guard let completion = self.content[0].text else {
+            throw SwiftBedrockError.completionNotFound("AnthropicResponseBody: content[0].text is nil")
+        }
+        return TextCompletion(completion)
     }
 
     struct Content: Codable {
