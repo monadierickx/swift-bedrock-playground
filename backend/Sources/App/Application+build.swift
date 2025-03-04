@@ -72,16 +72,22 @@ func buildRouter() -> Router<AppRequestContext> {
 
     // GET /foundation-models/text/{modelId}
     router.get("foundation-models/text/:modelId") { request, context -> TextCompletion in
-        guard let modelId = context.parameters.get("modelId") else {
-            throw HTTPError(.badRequest, message: "Invalid modelId.")
+        do {
+            guard let modelId = context.parameters.get("modelId") else {
+                throw HTTPError(.badRequest, message: "Invalid modelId.")  // add modelId
+            }
+            // check for nil
+            let model = BedrockModel(rawValue: modelId)
+            let input = try await request.decode(as: TextCompletionInput.self, context: context)
+            return try await bedrock.completeText(
+                input.prompt,
+                with: model,
+                maxTokens: input.maxTokens,
+                temperature: input.temperature)
+        } catch {
+            print(error)
+            throw error
         }
-        let model = BedrockModel(rawValue: modelId)
-        let input = try await request.decode(as: TextCompletionInput.self, context: context)
-        return try await bedrock.completeText(
-            input.prompt,
-            with: model,
-            maxTokens: input.maxTokens,
-            temperature: input.temperature)
     }
 
     return router

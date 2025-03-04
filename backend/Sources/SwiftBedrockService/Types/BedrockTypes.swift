@@ -1,88 +1,10 @@
+@preconcurrency import AWSBedrockRuntime
 import Foundation
-
-// MARK: - Data structures
-
-// model enum
-public struct BedrockModel: RawRepresentable, Equatable, Hashable, Sendable {
-    public var rawValue: String
-    
-    public init(rawValue: String) {
-        self.rawValue = rawValue
-    }
-}
-
-// Anthropic
-public extension BedrockModel {
-    static let instant: BedrockModel = BedrockModel(rawValue: "anthropic.claude-instant-v1")
-    static let claudev1: BedrockModel = BedrockModel(rawValue: "anthropic.claude-v1")
-    static let claudev2: BedrockModel = BedrockModel(rawValue: "anthropic.claude-v2")
-    static let claudev2_1: BedrockModel = BedrockModel(rawValue: "anthropic.claude-v2:1")
-    static let claudev3_haiku: BedrockModel = BedrockModel(rawValue: "anthropic.claude-3-haiku-20240307-v1:0")
-    func isAnthropic() -> Bool {
-        switch self {
-        case .instant, .claudev1, .claudev2, .claudev2_1, .claudev3_haiku: return true
-        default: return false
-        }
-    }
-}
-
-// Amazon Nova
-public extension BedrockModel {
-    static let nova_micro: BedrockModel = BedrockModel(rawValue: "amazon.nova-micro-v1:0")
-    func isNova() -> Bool {
-        switch self {
-            case .nova_micro: return true
-            default: return false
-        }
-    }
-}
-
-// Amazon Titan
-public extension BedrockModel {
-    static let titan_text_g1_premier: BedrockModel = BedrockModel(rawValue: "amazon.titan-text-premier-v1:0")
-    static let titan_text_g1_express: BedrockModel = BedrockModel(rawValue: "amazon.titan-text-express-v1")
-    static let titan_text_g1_lite: BedrockModel = BedrockModel(rawValue: "amazon.titan-text-lite-v1")
-    func isTitan() -> Bool {
-        switch self {
-            case .titan_text_g1_premier, .titan_text_g1_express, .titan_text_g1_lite: return true
-            default: return false
-        }
-    }
-}
-
-// Meta
-public extension BedrockModel {
-    static var llama2_13b: BedrockModel { .init(rawValue: "meta.llama2.13b") }
-    static var llama2_70b: BedrockModel { .init(rawValue: "meta.llama2.70b") }
-    func isMeta() -> Bool {
-        switch self {
-            case .llama2_13b, .llama2_70b: return true
-            default: return false
-        }
-    }
-}
-
-public extension BedrockModel {
-    init?(from: String?) {
-        guard let model = from else {
-            return nil
-        }
-        self.init(rawValue: model)
-        switch self {
-        case .instant,
-             .claudev1,
-             .claudev2,
-             .claudev2_1,
-             .llama2_13b: return
-        default: return nil
-        }
-    }
-}
 
 //public enum BedrockModel: Hashable {
 //    case anthropicModel(AnthropicModel)
 //    case metaModel(MetaModel)
-//    
+//
 //    public func id() -> BedrockModelIdentifier {
 //        switch self {
 //        case .anthropicModel(let anthropic): return anthropic.rawValue
@@ -93,27 +15,51 @@ public extension BedrockModel {
 
 public protocol BedrockResponse: Decodable {
     init(from data: Data) throws
+    func getTextCompletion() -> TextCompletion
 }
 
-public extension BedrockResponse {
-    static func decode<T: Decodable>(_ data: Data) throws -> T {
-        let decoder = JSONDecoder()
-        return try decoder.decode(T.self, from: data)
-    }
-    static func decode<T: Decodable>(json: String) throws -> T {
-        let data = json.data(using: .utf8)!
-        return try self.decode(data)
-    }
-}
+// extension BedrockResponse {
+//     public static func decode<T: Decodable>(_ data: Data) throws -> T {
+//         let decoder = JSONDecoder()
+//         return try decoder.decode(T.self, from: data)
+//     }
+//     public static func decode<T: Decodable>(json: String) throws -> T {
+//         let data = json.data(using: .utf8)!
+//         return try self.decode(data)
+//     }
+// }
 
-public protocol BedrockRequest: Encodable {
-    func encode() throws -> Data
-}
+// public protocol BedrockRequest: Encodable {
+//     func encode() throws -> Data
 
-public extension BedrockRequest {
-    func encode() throws -> Data {
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        return try encoder.encode(self)
-    }
-}
+//     init(modelId: String, prompt: String, maxTokens: Int?, temperature: Double?)
+
+//     // func getBody() -> Codable
+// }
+
+// extension BedrockRequest {
+//     func getInvokeModelInput(
+//         modelId: String, body: Codable, accept: String = "application/json",
+//         contentType: String = "application/json"
+//     ) -> InvokeModelInput {
+//         do {
+//             let jsonData: Data = try JSONEncoder().encode(body) // FIXME
+//             return InvokeModelInput(
+//                 accept: accept,
+//                 body: jsonData,
+//                 contentType: contentType,
+//                 modelId: modelId)
+//         } catch {
+//             print("Encoding error: \(error)")
+//             fatalError()  // FIXME
+//         }
+//     }
+// }
+
+// extension BedrockRequest {
+//     public func encode() throws -> Data {
+//         let encoder = JSONEncoder()
+//         encoder.keyEncodingStrategy = .convertToSnakeCase
+//         return try encoder.encode(self)
+//     }
+// }

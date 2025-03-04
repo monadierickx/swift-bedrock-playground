@@ -1,77 +1,55 @@
-@preconcurrency import AWSBedrock
-@preconcurrency import AWSBedrockRuntime
-import AWSClientRuntime
-import AWSSDKIdentity
-import Foundation
 
-public struct AnthropicRequest: BedrockRequest {
-    let modelId: String
-    let contentType: String = "application/json"
-    let accept: String = "application/json"
-    let body: AnthropicBody
 
-    init(modelId: String, prompt: String, maxTokens: Int? = 300, temperature: Double? = 0.6) {
-        self.modelId = modelId
-        self.body = AnthropicBody(
-            maxTokens: maxTokens ?? 300,
-            temperature: temperature ?? 0.6,
-            messages: [
-                AnthropicMessage(role: .user, content: [AnthropicContent(text: prompt)])
-            ])
-    }
+// public struct AnthropicRequest: BedrockRequest {
+//     // let modelId: String
+//     // let contentType: String
+//     // let accept: String
+//     let body: AnthropicBody
 
-    func getInvokeModelInput() -> InvokeModelInput {
-        // let body = try! JSONEncoder().encode(self.body)
-        // return  InvokeModelInput(
-        //     // accept: self.accept,
-        //     accept: "application/json",
-        //     // body: "\(self.body)".data(using: .utf8),
-        //     body: """
-        //         {
-        //             "anthropic_version": "bedrock-2023-05-31",
-        //             "messages": \(self.body.messages),
-        //             "max_tokens": \(self.body.maxTokens),
-        //             "temperature": \(self.body.temperature)
-        //         }
-        //         """.data(using: .utf8),
-        //     // contentType: self.contentType,
-        //     contentType: "application/json",
-        //     modelId: self.modelId)
+//     public init(modelId: String, prompt: String, maxTokens: Int? = 300, temperature: Double? = 0.6)
+//     {
+//         self.modelId = modelId
+//         self.contentType = "application/json"
+//         self.accept = "application/json"
+//         self.body = AnthropicBody(
+//             maxTokens: maxTokens ?? 300,
+//             temperature: temperature ?? 0.6,
+//             messages: [
+//                 AnthropicMessage(role: .user, content: [AnthropicContent(text: prompt)])
+//             ])
+//     }
 
-        // FIXME
-        let messages = """
-            [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "\(self.body.messages[0].content[0].text)"
-                        }
-                    ]
-                }
-            ]
-            """
+// public func getInvokeModelInput(body: Codable) -> InvokeModelInput {
+//     do {
+//         let jsonData: Data = try JSONEncoder().encode(body)
+//         return InvokeModelInput(
+//             accept: accept,
+//             body: jsonData,
+//             contentType: contentType,
+//             modelId: modelId)
+//     } catch {
+//         print("Encoding error: \(error)")
+//         fatalError()  // FIXME
+//     }
+// }
 
-        return InvokeModelInput(
-            accept: "application/json",
-            body: """
-                {
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "messages": \(messages),
-                    "max_tokens": \(self.body.maxTokens),
-                    "temperature": \(self.body.temperature)
-                }
-                """.data(using: .utf8),
-            contentType: "application/json",
-            modelId: modelId)
-    }
+// public func getBody() -> Codable {
+//     return self.body
+// }
 
-    public struct AnthropicBody: Codable {
-        let anthropicVersion: String = "bedrock-2023-05-31"
-        let maxTokens: Int
-        let temperature: Double
-        let messages: [AnthropicMessage]
+public struct AnthropicBody: Codable {
+    let anthropic_version: String
+    let max_tokens: Int
+    let temperature: Double
+    let messages: [AnthropicMessage]
+
+    // FIXME: nice init 
+
+    init(maxTokens: Int, temperature: Double, messages: [AnthropicMessage]) {
+        self.anthropic_version = "bedrock-2023-05-31"
+        self.max_tokens = maxTokens
+        self.temperature = temperature
+        self.messages = messages
     }
 
     public struct AnthropicMessage: Codable {
@@ -80,13 +58,19 @@ public struct AnthropicRequest: BedrockRequest {
     }
 
     public struct AnthropicContent: Codable {
-        let type: String = "text"
+        let type: String
         let text: String
-    }
 
+        init(text: String) {
+            self.type = "text"
+            self.text = text
+        }
+    }
 }
 
-struct AnthropicResponse: Decodable {
+// }
+
+struct AnthropicResponse: BedrockResponse {
     let id: String
     let type: String
     let role: String
@@ -113,6 +97,6 @@ struct AnthropicResponse: Decodable {
     }
 
     func getTextCompletion() -> TextCompletion {
-        return TextCompletion(self.content[0].text!) // FIXME
+        return TextCompletion(self.content[0].text!)  // FIXME
     }
 }
