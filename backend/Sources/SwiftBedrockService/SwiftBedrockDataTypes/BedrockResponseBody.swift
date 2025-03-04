@@ -29,7 +29,7 @@ public struct BedrockResponseBody {
                 throw SwiftBedrockError.invalidModel(model.rawValue)
             }
         } catch {
-            throw SwiftBedrockError.invalidResponse(body)
+            throw SwiftBedrockError.invalidResponseBody(body)
         }
     }
 
