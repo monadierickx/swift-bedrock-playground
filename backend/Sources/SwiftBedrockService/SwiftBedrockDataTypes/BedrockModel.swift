@@ -1,32 +1,30 @@
 import Foundation
 
-public struct BedrockModel: Equatable, Hashable, Sendable { // RawRepresentable, 
+public struct BedrockModel: Equatable, Hashable, Sendable { // FIXME: understand RawRepresentable and put back
     public var rawValue: String
     let family: ModelFamily
-    
-    // public init(rawValue: String) {
-    //     self.rawValue = rawValue
-    // }
 
-    public init(rawValue: String, family: ModelFamily){
-        self.rawValue = rawValue // FIXME: id or rawValue? 
+    public init(rawValue: String, family: ModelFamily) {
+        self.rawValue = rawValue  // CHECKME: id or rawValue?
         self.family = family
     }
 
-    public init(_ id: String) {
+    public init(_ id: String) throws {
         self.rawValue = id
         switch id {
-            case BedrockModel.claudev1.rawValue: self.family = .anthropic
-            case BedrockModel.claudev2.rawValue: self.family = .anthropic
-            case BedrockModel.claudev2_1.rawValue: self.family = .anthropic
-            case BedrockModel.claudev3_haiku.rawValue: self.family = .anthropic
-            case BedrockModel.claudev3_5_haiku.rawValue: self.family = .anthropic
-            case BedrockModel.instant.rawValue: self.family = .anthropic
-            case BedrockModel.titan_text_g1_premier.rawValue: self.family = .titan
-            case BedrockModel.titan_text_g1_express.rawValue: self.family = .titan
-            case BedrockModel.titan_text_g1_lite.rawValue: self.family = .titan
-            case BedrockModel.nova_micro.rawValue: self.family = .nova
-            default: self.family = .unknownModelFamily // FIXME
+        case BedrockModel.claudev1.rawValue: self.family = .anthropic
+        case BedrockModel.claudev2.rawValue: self.family = .anthropic
+        case BedrockModel.claudev2_1.rawValue: self.family = .anthropic
+        case BedrockModel.claudev3_haiku.rawValue: self.family = .anthropic
+        case BedrockModel.claudev3_5_haiku.rawValue: self.family = .anthropic
+        case BedrockModel.instant.rawValue: self.family = .anthropic
+        case BedrockModel.titan_text_g1_premier.rawValue: self.family = .titan
+        case BedrockModel.titan_text_g1_express.rawValue: self.family = .titan
+        case BedrockModel.titan_text_g1_lite.rawValue: self.family = .titan
+        case BedrockModel.nova_micro.rawValue: self.family = .nova
+        default:
+            throw SwiftBedrockError.invalidModel(
+                "BedrockModel could not be initialized, because the modelId was not recognized")
         }
     }
 }
@@ -41,7 +39,8 @@ public extension BedrockModel {
     static let claudev3_5_haiku: BedrockModel = BedrockModel(rawValue: "anthropic.claude-3-5-haiku-20241022-v1:0", family: .anthropic)
     func isAnthropic() -> Bool {
         switch self {
-        case .instant, .claudev1, .claudev2, .claudev2_1, .claudev3_haiku, .claudev3_5_haiku: return true
+        case .instant, .claudev1, .claudev2, .claudev2_1, .claudev3_haiku, .claudev3_5_haiku:
+            return true
         default: return false
         }
     }
@@ -52,8 +51,8 @@ public extension BedrockModel {
     static let nova_micro: BedrockModel = BedrockModel(rawValue: "amazon.nova-micro-v1:0", family: .nova)
     func isNova() -> Bool {
         switch self {
-            case .nova_micro: return true
-            default: return false
+        case .nova_micro: return true
+        default: return false
         }
     }
 }
@@ -65,8 +64,8 @@ public extension BedrockModel {
     static let titan_text_g1_lite: BedrockModel = BedrockModel(rawValue: "amazon.titan-text-lite-v1", family: .titan)
     func isTitan() -> Bool {
         switch self {
-            case .titan_text_g1_premier, .titan_text_g1_express, .titan_text_g1_lite: return true
-            default: return false
+        case .titan_text_g1_premier, .titan_text_g1_express, .titan_text_g1_lite: return true
+        default: return false
         }
     }
 }
@@ -77,13 +76,13 @@ public extension BedrockModel {
     static var llama2_70b: BedrockModel { .init(rawValue: "meta.llama2.70b", family: .meta) }
     func isMeta() -> Bool {
         switch self {
-            case .llama2_13b, .llama2_70b: return true
-            default: return false
+        case .llama2_13b, .llama2_70b: return true
+        default: return false
         }
     }
 }
 
-// FIXME 
+// FIXME: understand this
 // public extension BedrockModel {
 //     init?(from: String?) {
 //         guard let model = from else {

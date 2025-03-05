@@ -5,5 +5,4 @@ public enum ModelFamily: Sendable {
     case titan
     case nova
     case meta
-    case unknownModelFamily
 }

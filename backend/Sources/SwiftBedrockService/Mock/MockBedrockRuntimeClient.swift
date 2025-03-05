@@ -19,7 +19,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
         guard let inputBody = input.body else {
             throw MockBedrockRuntimeClientError.invokeModelError("Body in InvokeModelInput is nil")
         }
-        let model: BedrockModel = BedrockModel(modelId)
+        let model: BedrockModel = try BedrockModel(modelId)
         switch model.family {
         case .nova:
             return InvokeModelOutput(body: try invokeNovaModel(body: inputBody))

@@ -73,13 +73,13 @@ func buildRouter() async throws -> Router<AppRequestContext> {
         }
 
         // GET /foundation-models/text/{modelId}
-        router.post("/foundation-models/text/:modelId") { request, context -> TextCompletion in  // FIXME: are we sure about POST?
+        router.post("/foundation-models/text/:modelId") { request, context -> TextCompletion in 
             do {
                 guard let modelId = context.parameters.get("modelId") else {
-                    throw HTTPError(.badRequest, message: "Invalid modelId.")  // add modelId
+                    throw HTTPError(.badRequest, message: "Invalid modelId.")  // FIXME: add modelId
                 }
                 // check for nil
-                let model = BedrockModel(modelId)  // FIXME
+                let model = try BedrockModel(modelId)  // FIXME: some check for the modelId
                 let input = try await request.decode(as: TextCompletionInput.self, context: context)
                 return try await bedrock.completeText(
                     input.prompt,
