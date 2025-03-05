@@ -1,7 +1,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct BedrockResponseBody {
+public struct BedrockResponse {
     let model: BedrockModel
     let contentType: String
     let body: ContainsTextCompletion

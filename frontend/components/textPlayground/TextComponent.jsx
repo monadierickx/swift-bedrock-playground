@@ -48,18 +48,18 @@ export default function TextContainer() {
 
         setIsLoading(true);
 
-        const endpoint = `/foundation-models/model/text/${selectedModel.modelId}/invoke`;
+        const endpoint = `/foundation-models/text/${selectedModel.modelId}`;
         const api = `${GlobalConfig.apiHost}:${GlobalConfig.apiPort}${endpoint}`;
 
         try {
             const body = JSON.stringify({
                 prompt: payload.prompt,
-                temperature: payload.temperature,
-                maxTokens: payload.maxTokens,
+                temperature: parseFloat(payload.temperature),
+                maxTokens: parseInt(payload.maxTokens, 10),
             });
 
             const response = await fetch(api, {
-                method: 'POST',
+                method: 'POST', // FIXME: are we sure about POST? 
                 headers: { 'Content-Type': 'application/json' },
                 body: body
             });

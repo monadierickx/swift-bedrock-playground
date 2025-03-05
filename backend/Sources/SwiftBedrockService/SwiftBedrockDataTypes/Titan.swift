@@ -1,6 +1,6 @@
 import Foundation
 
-public struct TitanRequestBody: Codable {
+public struct TitanRequestBody: BedrockBodyCodable {
     let inputText: String
     let textGenerationConfig: TextGenerationConfig
 

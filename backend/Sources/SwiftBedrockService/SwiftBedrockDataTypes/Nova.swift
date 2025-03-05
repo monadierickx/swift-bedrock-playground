@@ -1,6 +1,6 @@
 import Foundation
 
-public struct NovaRequestBody: Codable {
+public struct NovaRequestBody: BedrockBodyCodable {
     let inferenceConfig: InferenceConfig
     let messages: [Message]
 

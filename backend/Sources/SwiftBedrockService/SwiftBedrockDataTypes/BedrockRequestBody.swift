@@ -1,14 +1,14 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-struct BedrockRequestBody {
+struct BedrockRequest {
     let model: BedrockModel
     let contentType: String
     let accept: String
-    let body: Codable
+    private let body: BedrockBodyCodable
 
     private init(
-        model: BedrockModel, body: Codable, contentType: String = "application/json",
+        model: BedrockModel, body: BedrockBodyCodable, contentType: String = "application/json",
         accept: String = "application/json"
     ) {
         self.model = model
@@ -40,7 +40,7 @@ struct BedrockRequestBody {
 
     public func getInvokeModelInput() throws -> InvokeModelInput {
         do {
-            let jsonData: Data = try JSONEncoder().encode(self.body)  // FIXME
+            let jsonData: Data = try JSONEncoder().encode(self.body)
             return InvokeModelInput(
                 accept: self.accept,
                 body: jsonData,
@@ -54,3 +54,5 @@ struct BedrockRequestBody {
     }
 
 }
+
+public protocol BedrockBodyCodable: Codable {}

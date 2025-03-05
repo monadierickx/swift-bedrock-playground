@@ -26,7 +26,7 @@ public struct BedrockModel: Equatable, Hashable, Sendable { // RawRepresentable,
             case BedrockModel.titan_text_g1_express.rawValue: self.family = .titan
             case BedrockModel.titan_text_g1_lite.rawValue: self.family = .titan
             case BedrockModel.nova_micro.rawValue: self.family = .nova
-            default: self.family = .unknownModelFamily
+            default: self.family = .unknownModelFamily // FIXME
         }
     }
 }

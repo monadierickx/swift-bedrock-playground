@@ -6,37 +6,38 @@ import Foundation
 
 public struct SwiftBedrock: Sendable {
     var region: String
+    private var bedrockClient: MyBedrockClientProtocol
+    private var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
-    public init(region: String = "us-east-1") {
-        self.region = region
-    }
+    public init(useMock: Bool = false, region: String = "us-east-1") async throws {
+        if useMock {
+            self.region = region
+            self.bedrockClient = MockBedrockClient()
+            self.bedrockRuntimeClient = MockBedrockRuntimeClient()
+        } else {
+            let identityResolver = try SSOAWSCredentialIdentityResolver()  // FIXME later: allow other methods
+            let clientConfig =
+                try await BedrockClient.BedrockClientConfiguration(
+                    region: region)
+            clientConfig.awsCredentialIdentityResolver = identityResolver
+            let runtimeClientConfig =
+                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                    region: region)
+            runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
 
-    // FIXME later: getBedrockConfig -> T and getBedrockClient() -> T
-    private func configureBedrockRuntimeClient() async throws -> BedrockRuntimeClient {
-        let identityResolver = try SSOAWSCredentialIdentityResolver()  // FIXME later
-        let runtimeClientConfig =
-            try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                region: region)
-        runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
-
-        return BedrockRuntimeClient(config: runtimeClientConfig)
-    }
-
-    private func configureBedrockClient() async throws -> BedrockClient {
-        let identityResolver = try SSOAWSCredentialIdentityResolver()
-        let clientConfig = try await BedrockClient.BedrockClientConfiguration(
-            region: region)
-        clientConfig.awsCredentialIdentityResolver = identityResolver
-
-        return BedrockClient(config: clientConfig)
+            self.region = region
+            self.bedrockClient = BedrockClient(config: clientConfig)
+            self.bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
+        }
     }
 
     /// Lists all available foundation models from Amazon Bedrock
     /// - Throws: SwiftBedrockError.invalidResponse
     /// - Returns: An array of ModelInfo objects containing details about each available model.
     public func listModels() async throws -> [ModelInfo] {
-        let client = try await configureBedrockClient()
-        let response = try await client.listFoundationModels(input: ListFoundationModelsInput())
+        // let client = try await configureBedrockClient()
+        let response = try await bedrockClient.listFoundationModels(
+            input: ListFoundationModelsInput())
         guard let models = response.modelSummaries else {
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting the modelSummaries from the response.")
@@ -47,7 +48,7 @@ public struct SwiftBedrock: Sendable {
                 let providerName = model.providerName,
                 let modelName = model.modelName
             else {
-                return nil
+                return nil  // FIXME later: add logging here
             }
             return ModelInfo(
                 modelName: modelName,
@@ -82,17 +83,16 @@ public struct SwiftBedrock: Sendable {
                 "Temperature should be a value between 0 and 1. Temperature: \(temperature)")
         }
 
-        let request: BedrockRequestBody = try BedrockRequestBody(
+        let request: BedrockRequest = try BedrockRequest(
             model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
-        let runtimeClient = try await configureBedrockRuntimeClient()
         let input: InvokeModelInput = try request.getInvokeModelInput()
-        let response = try await runtimeClient.invokeModel(input: input)
+        let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting body from response.")
         }
-        let bedrockResponseBody: BedrockResponseBody = try BedrockResponseBody(
+        let BedrockResponse: BedrockResponse = try BedrockResponse(
             body: responseBody, model: model)
-        return try bedrockResponseBody.getTextCompletion()
+        return try BedrockResponse.getTextCompletion()
     }
 }

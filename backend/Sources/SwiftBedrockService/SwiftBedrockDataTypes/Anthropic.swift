@@ -1,6 +1,6 @@
 import Foundation
 
-public struct AnthropicRequestBody: Codable {
+public struct AnthropicRequestBody: BedrockBodyCodable {
     let anthropic_version: String
     let max_tokens: Int
     let temperature: Double
