@@ -19,19 +19,13 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
         guard let inputBody = input.body else {
             throw MockBedrockRuntimeClientError.invokeModelError("Body in InvokeModelInput is nil")
         }
-
-        switch modelId {
-        case "amazon.nova-micro-v1:0":
+        let model: BedrockModel = BedrockModel(modelId)
+        switch model.family {
+        case .nova:
             return InvokeModelOutput(body: try invokeNovaModel(body: inputBody))
-        case "amazon.titan-text-premier-v1:0",
-            "amazon.titan-text-express-v1",
-            "amazon.titan-text-lite-v1":
+        case .titan:
             return InvokeModelOutput(body: try invokeTitanModel(body: inputBody))
-        case "anthropic.claude-3-haiku-20240307-v1:0",
-            "anthropic.claude-v1",
-            "anthropic.claude-v2",
-            "anthropic.claude-v2:1",
-            "anthropic.claude-3-5-haiku-20241022-v1:0":
+        case .anthropic:
             return InvokeModelOutput(body: try invokeAnthropicModel(body: inputBody))
         default:
             throw MockBedrockRuntimeClientError.invokeModelError("Unknown modelId: \(modelId)")

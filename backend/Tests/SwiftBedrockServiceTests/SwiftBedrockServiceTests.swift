@@ -39,4 +39,40 @@ struct SwiftBedrockServiceTests {
         )
         #expect(completion.completion == "This is the textcompletion for: This is a test")
     }
+    
+    @Test("Complete text using a specific temperature", arguments: [0, 0.1, 0.5, 0.8, 1, 1.2, 3, 400, -39.3])
+    func invalidTemperatureError(temperature: Double) async throws {
+        if temperature <= 1 && temperature >= 0 {
+            let completion: TextCompletion = try await mock.completeText(
+                "This is a test",
+                with: BedrockModel.nova_micro,
+                temperature: temperature)
+            #expect(completion.completion == "This is the textcompletion for: This is a test")
+        } else {
+            await #expect(throws: SwiftBedrockError.self) {
+                let _: TextCompletion = try await mock.completeText(
+                    "This is a test",
+                    with: BedrockModel.nova_micro,
+                    temperature: temperature)
+            }
+        }
+    }
+    
+    @Test("Complete text using a specific maxTokens", arguments: [1, 10, 100, 1000, 5000, 0, -1, -199])
+    func invalidMaxTokensError(maxTokens: Int) async throws {
+        if maxTokens > 0 {
+            let completion: TextCompletion = try await mock.completeText(
+                "This is a test",
+                with: BedrockModel.nova_micro,
+                maxTokens: maxTokens)
+            #expect(completion.completion == "This is the textcompletion for: This is a test")
+        } else {
+            await #expect(throws: SwiftBedrockError.self) {
+                let _: TextCompletion = try await mock.completeText(
+                    "This is a test",
+                    with: BedrockModel.nova_micro,
+                    maxTokens: maxTokens)
+            }
+        }
+    }
 }

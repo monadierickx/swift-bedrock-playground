@@ -35,7 +35,6 @@ public struct SwiftBedrock: Sendable {
     /// - Throws: SwiftBedrockError.invalidResponse
     /// - Returns: An array of ModelInfo objects containing details about each available model.
     public func listModels() async throws -> [ModelInfo] {
-        // let client = try await configureBedrockClient()
         let response = try await bedrockClient.listFoundationModels(
             input: ListFoundationModelsInput())
         guard let models = response.modelSummaries else {
