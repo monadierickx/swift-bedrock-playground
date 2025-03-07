@@ -28,10 +28,10 @@ struct NovaResponseBody: ContainsTextCompletion {
     let stopReason: String
     let usage: Usage
 
-    private init(from data: Data) throws {
-        let decoder = JSONDecoder()
-        self = try decoder.decode(NovaResponseBody.self, from: data)
-    }
+//    private init(from data: Data) throws {
+//        let decoder = JSONDecoder()
+//        self = try decoder.decode(NovaResponseBody.self, from: data)
+//    }
 
     public func getTextCompletion() throws -> TextCompletion {
         return TextCompletion(output.message.content[0].text)

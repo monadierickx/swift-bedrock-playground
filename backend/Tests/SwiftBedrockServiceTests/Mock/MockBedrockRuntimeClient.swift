@@ -2,19 +2,14 @@
 import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
-
-public protocol MyBedrockRuntimeClientProtocol: Sendable {
-    func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput
-}
-
-extension BedrockRuntimeClient: @retroactive @unchecked Sendable, MyBedrockRuntimeClientProtocol {}
+import SwiftBedrockService
 
 public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
     public init() {}
 
     public func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput {
         guard let modelId = input.modelId else {
-            throw MockBedrockRuntimeClientError.invokeModelError("ModelId in InvokeModelInput is nil")
+            throw MockBedrockRuntimeClientError.invokeModelError("ModelId in InvokeModelInput is nil") // FIXME: no guard! 
         }
         guard let inputBody = input.body else {
             throw MockBedrockRuntimeClientError.invokeModelError("Body in InvokeModelInput is nil")
@@ -28,7 +23,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
         case .anthropic:
             return InvokeModelOutput(body: try invokeAnthropicModel(body: inputBody))
         default:
-            throw MockBedrockRuntimeClientError.invokeModelError("Unknown modelId: \(modelId)")
+            throw MockBedrockRuntimeClientError.invokeModelError("Unknown modelId: \(modelId)") // No error! 
         }
     }
 

@@ -4,31 +4,39 @@ import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
 
-public struct SwiftBedrock: Sendable {
-    var region: String
-    private var bedrockClient: MyBedrockClientProtocol
-    private var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
-
-    public init(useMock: Bool = false, region: String = "us-east-1") async throws {
-        if useMock {
-            self.region = region
-            self.bedrockClient = MockBedrockClient()
-            self.bedrockRuntimeClient = MockBedrockRuntimeClient()
+public struct SwiftBedrock {
+    let region: String
+    private let bedrockClient: MyBedrockClientProtocol
+    private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
+    
+    public init(
+        region: String = "us-east-1", 
+        bedrockClient: MyBedrockClientProtocol? = nil,
+        bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil
+    ) async throws {
+        if bedrockClient == nil || bedrockRuntimeClient == nil {
+            self = try await SwiftBedrock(region: region)
         } else {
-            let identityResolver = try SSOAWSCredentialIdentityResolver()  // FIXME later: allow other methods
-            let clientConfig =
-                try await BedrockClient.BedrockClientConfiguration(
-                    region: region)
-            clientConfig.awsCredentialIdentityResolver = identityResolver
-            let runtimeClientConfig =
-                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                    region: region)
-            runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
-
             self.region = region
-            self.bedrockClient = BedrockClient(config: clientConfig)
-            self.bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
+            self.bedrockClient = bedrockClient!
+            self.bedrockRuntimeClient = bedrockRuntimeClient!
         }
+    }
+
+    private init(region: String) async throws {
+        let identityResolver = try SSOAWSCredentialIdentityResolver()  // FIXME later: allow other methods
+        let clientConfig =
+            try await BedrockClient.BedrockClientConfiguration(
+                region: region)
+        clientConfig.awsCredentialIdentityResolver = identityResolver
+        let runtimeClientConfig =
+            try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                region: region)
+        runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
+
+        self.region = region
+        self.bedrockClient = BedrockClient(config: clientConfig)
+        self.bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
     }
 
     /// Lists all available foundation models from Amazon Bedrock

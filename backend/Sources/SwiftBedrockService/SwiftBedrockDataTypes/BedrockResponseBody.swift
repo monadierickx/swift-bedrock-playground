@@ -6,30 +6,29 @@ public struct BedrockResponse {
     let contentType: String
     let body: ContainsTextCompletion
 
-    private init(model: BedrockModel, contentType: String, body: ContainsTextCompletion) {
+    private init(model: BedrockModel, contentType: String = "application/json", body: ContainsTextCompletion) {
         self.model = model
         self.contentType = contentType
         self.body = body
     }
 
-    public init(body: Data, model: BedrockModel, contentType: String = "application/json") throws {
-        self.contentType = contentType
-        self.model = model
-
+    public init(body data: Data, model: BedrockModel) throws {
         do {
+            var body: ContainsTextCompletion
             let decoder = JSONDecoder()
             switch model.family {
             case .anthropic:
-                self.body = try decoder.decode(AnthropicResponseBody.self, from: body)
+                body = try decoder.decode(AnthropicResponseBody.self, from: data)
             case .titan:
-                self.body = try decoder.decode(TitanResponseBody.self, from: body)
+                body = try decoder.decode(TitanResponseBody.self, from: data)
             case .nova:
-                self.body = try decoder.decode(NovaResponseBody.self, from: body)
+                body = try decoder.decode(NovaResponseBody.self, from: data)
             default:
                 throw SwiftBedrockError.invalidModel(model.rawValue)
             }
+            self.init(model: model, body: body)
         } catch {
-            throw SwiftBedrockError.invalidResponseBody(body)
+            throw SwiftBedrockError.invalidResponseBody(data)
         }
     }
 
@@ -44,7 +43,6 @@ public struct BedrockResponse {
     }
 }
 
-// suggestion:
 public protocol ContainsTextCompletion: Codable {
     func getTextCompletion() throws -> TextCompletion
 }

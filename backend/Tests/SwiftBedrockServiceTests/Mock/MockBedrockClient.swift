@@ -2,15 +2,7 @@
 import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
-
-// BedrockClient
-public protocol MyBedrockClientProtocol: Sendable {
-    func listFoundationModels(input: ListFoundationModelsInput) async throws
-        -> ListFoundationModelsOutput
-}
-
-extension BedrockClient: @retroactive @unchecked Sendable, MyBedrockClientProtocol {}
-// CHECKME: is this the way to go?
+import SwiftBedrockService
 
 public struct MockBedrockClient: MyBedrockClientProtocol {
     public init() {}
@@ -33,8 +25,9 @@ public struct MockBedrockClient: MyBedrockClientProtocol {
                     responseStreamingSupported: true
                 ),
                 BedrockClientTypes.FoundationModelSummary(
-                    modelId: "anthropic.claude-instant-v3",
+                    modelId: "unknownID",
                     modelName: "Claude Instant 3",
+                    providerName: nil,
                     responseStreamingSupported: false
                 ),
             ])

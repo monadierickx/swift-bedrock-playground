@@ -20,10 +20,10 @@ struct TitanResponseBody: ContainsTextCompletion {
     let inputTextTokenCount: Int
     let results: [Result]
 
-    private init(from data: Data) throws {
-        let decoder = JSONDecoder()
-        self = try decoder.decode(TitanResponseBody.self, from: data)
-    }
+//    private init(from data: Data) throws {
+//        let decoder = JSONDecoder()
+//        self = try decoder.decode(TitanResponseBody.self, from: data)
+//    }
 
     func getTextCompletion() throws -> TextCompletion {
         return TextCompletion(results[0].outputText)
