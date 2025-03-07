@@ -15,6 +15,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build
+      working-directory: ./backend
       run: swift build
 
   test:
@@ -23,4 +24,5 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Run tests
+      working-directory: ./backend
       run: swift test
