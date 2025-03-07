@@ -1,5 +1,4 @@
 import Testing
-
 @testable import SwiftBedrockService
 
 @Suite("SwiftBedrockService Tests")
@@ -100,6 +99,29 @@ struct SwiftBedrockServiceTests {
                 "This is a test",
                 with: BedrockModel.nova_micro,
                 maxTokens: maxTokens)
+        }
+    }
+
+    @Test(
+        "Complete text using a valid prompt",
+        arguments: ["This is a test", "!@#$%^&*()_+{}|:<>?", String(repeating: "test ", count: 1000)])
+    func completeTextWithValidPrompt(prompt: String) async throws {
+        let completion: TextCompletion = try await bedrock.completeText(
+            prompt,
+            with: BedrockModel.nova_micro,
+            maxTokens: 200)
+        #expect(completion.completion == "This is the textcompletion for: \(prompt)")
+    }
+
+    @Test(
+        "Complete text using an invalid prompt",
+        arguments: ["", " ", " \n  ", "\t"])
+    func completeTextWithInvalidPrompt(prompt: String) async throws {
+        await #expect(throws: SwiftBedrockError.self) {
+            let _: TextCompletion = try await bedrock.completeText(
+                prompt,
+                with: BedrockModel.nova_micro,
+                maxTokens: 10)
         }
     }
 }

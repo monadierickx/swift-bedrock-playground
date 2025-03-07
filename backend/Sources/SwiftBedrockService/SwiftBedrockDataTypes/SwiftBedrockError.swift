@@ -3,6 +3,7 @@ import Foundation
 enum SwiftBedrockError: Error {
     case invalidMaxTokens(String)
     case invalidTemperature(String)
+    case invalidPrompt(String)
     case invalidRequest(String)
     case invalidResponse(String)
     case invalidResponseBody(Data?)

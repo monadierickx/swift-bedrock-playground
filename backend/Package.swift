@@ -14,7 +14,9 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
         .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.25"),
         .package(url: "https://github.com/smithy-lang/smithy-swift", from: "0.118.0"),
-        .package(url: "https://github.com/swiftlang/swift-testing", branch: "main") // FIXME
+        .package(url: "https://github.com/swiftlang/swift-testing", branch: "main"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.3")
+
     ],
     targets: [
         .executableTarget(name: "App",
@@ -32,6 +34,7 @@ let package = Package(
                 .product(name: "AWSBedrock", package: "aws-sdk-swift"),
                 .product(name: "AWSBedrockRuntime", package: "aws-sdk-swift"),
                 .product(name: "Smithy", package: "smithy-swift"),
+                .product(name: "Logging", package: "swift-log"),
             ],
             path: "Sources/SwiftBedrockService"
         ),

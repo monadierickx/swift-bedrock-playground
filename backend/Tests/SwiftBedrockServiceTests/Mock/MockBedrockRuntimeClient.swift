@@ -9,10 +9,10 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
 
     public func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput {
         guard let modelId = input.modelId else {
-            throw MockBedrockRuntimeClientError.invokeModelError("ModelId in InvokeModelInput is nil") // FIXME: no guard! 
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
         guard let inputBody = input.body else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Body in InvokeModelInput is nil")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
         let model: BedrockModel = try BedrockModel(modelId)
         switch model.family {
@@ -23,7 +23,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
         case .anthropic:
             return InvokeModelOutput(body: try invokeAnthropicModel(body: inputBody))
         default:
-            throw MockBedrockRuntimeClientError.invokeModelError("Unknown modelId: \(modelId)") // No error! 
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
     }
 
@@ -33,7 +33,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 with: body, options: [])
                 as? [String: Any]
         else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
         if let messages = json["messages"] as? [[String: Any]],
             let firstMessage = messages.first,
@@ -61,7 +61,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 }
                 """.data(using: .utf8)!
         } else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON structure for Nova")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
     }
 
@@ -71,7 +71,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 with: body, options: [])
                 as? [String: Any]
         else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
         if let inputText = json["inputText"] as? String {
             return """
@@ -87,7 +87,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 }
                 """.data(using: .utf8)!
         } else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON structure for Titan")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
     }
 
@@ -97,7 +97,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 with: body, options: [])
                 as? [String: Any]
         else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
         if let messages = json["messages"] as? [[String: Any]],
             let firstMessage = messages.first,
@@ -124,11 +124,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
                 }
                 """.data(using: .utf8)!
         } else {
-            throw MockBedrockRuntimeClientError.invokeModelError("Invalid JSON structure for Anthropic")
+            throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
     }
-}
-
-enum MockBedrockRuntimeClientError: Error {
-    case invokeModelError(String)
 }

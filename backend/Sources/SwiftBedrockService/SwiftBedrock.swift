@@ -3,27 +3,36 @@
 import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
+import Logging
 
 public struct SwiftBedrock {
     let region: String
     private let bedrockClient: MyBedrockClientProtocol
     private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
-    
+    var logger: Logger
+
     public init(
-        region: String = "us-east-1", 
+        region: String = "us-east-1",
         bedrockClient: MyBedrockClientProtocol? = nil,
         bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil
     ) async throws {
         if bedrockClient == nil || bedrockRuntimeClient == nil {
             self = try await SwiftBedrock(region: region)
         } else {
+            self.logger = Logger(label: "swiftbedrock.service")  // CHECKME: different name?
+            self.logger.trace("Initializing SwiftBedrock", metadata: ["region": .string(region)])
             self.region = region
             self.bedrockClient = bedrockClient!
             self.bedrockRuntimeClient = bedrockRuntimeClient!
         }
+        self.logger.trace("Initialized SwiftBedrock", metadata: ["region": .string(region)])
     }
 
     private init(region: String) async throws {
+        self.logger = Logger(label: "swiftbedrock.service")
+        self.logger.trace("Initializing SwiftBedrock", metadata: ["region": .string(region)])
+        self.region = region
+
         let identityResolver = try SSOAWSCredentialIdentityResolver()  // FIXME later: allow other methods
         let clientConfig =
             try await BedrockClient.BedrockClientConfiguration(
@@ -34,7 +43,6 @@ public struct SwiftBedrock {
                 region: region)
         runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
 
-        self.region = region
         self.bedrockClient = BedrockClient(config: clientConfig)
         self.bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
     }
@@ -43,9 +51,11 @@ public struct SwiftBedrock {
     /// - Throws: SwiftBedrockError.invalidResponse
     /// - Returns: An array of ModelInfo objects containing details about each available model.
     public func listModels() async throws -> [ModelInfo] {
+        logger.trace("Fetching foundation models")
         let response = try await bedrockClient.listFoundationModels(
             input: ListFoundationModelsInput())
         guard let models = response.modelSummaries else {
+            logger.info("Failed to extract modelSummaries from response")
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting the modelSummaries from the response.")
         }
@@ -55,13 +65,20 @@ public struct SwiftBedrock {
                 let providerName = model.providerName,
                 let modelName = model.modelName
             else {
-                return nil  // FIXME later: add logging here
+                logger.debug("Skipping model due to missing required properties")
+                return nil
             }
             return ModelInfo(
                 modelName: modelName,
                 providerName: providerName,
                 modelId: modelId)
         }
+        logger.trace(
+            "Fetched foundation models",
+            metadata: [
+                "models.count": .stringConvertible(modelsInfo.count)
+                // "models.content": .stringConvertible(modelsInfo),
+            ])
         return modelsInfo
     }
 
@@ -78,28 +95,61 @@ public struct SwiftBedrock {
     public func completeText(
         _ text: String, with model: BedrockModel, maxTokens: Int? = nil, temperature: Double? = nil
     ) async throws -> TextCompletion {
+        logger.trace(
+            "Generating text completion",
+            metadata: [
+                "model.id": .string(model.rawValue),
+                "model.family": .string(model.family.description),
+                "prompt": .string(text),
+                "maxTokens": .stringConvertible(maxTokens ?? "not defined"),
+            ])
         let maxTokens = maxTokens ?? 300
         guard maxTokens >= 1 else {
+            logger.debug(
+                "Invalid maxTokens", metadata: ["maxTokens": .stringConvertible(maxTokens)])
             throw SwiftBedrockError.invalidMaxTokens(
                 "MaxTokens should be at least 1. MaxTokens: \(maxTokens)")
         }
 
         let temperature = temperature ?? 0.6
         guard temperature >= 0 && temperature <= 1 else {
+            logger.debug(
+                "Invalid temperature", metadata: ["temperature": .stringConvertible(temperature)])
             throw SwiftBedrockError.invalidTemperature(
                 "Temperature should be a value between 0 and 1. Temperature: \(temperature)")
+        }
+
+        guard !text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
+            logger.debug("Invalid prompt", metadata: ["prompt": .string(text)])
+            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
         }
 
         let request: BedrockRequest = try BedrockRequest(
             model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
         let input: InvokeModelInput = try request.getInvokeModelInput()
+        logger.trace(
+            "Sending request to invokeModel",
+            metadata: [
+                "model": .string(model.rawValue), "request": .string(String(describing: input)),
+            ])
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
+            logger.debug(
+                "Invalid response",
+                metadata: [
+                    "response": .string(String(describing: response)),
+                    "hasBody": .stringConvertible(response.body != nil),
+                ])
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting body from response.")
         }
         let BedrockResponse: BedrockResponse = try BedrockResponse(
             body: responseBody, model: model)
+        logger.trace(
+            "Generated text completion",
+            metadata: [
+                "model": .string(model.rawValue), "response": .string(String(describing: response)),
+            ])
         return try BedrockResponse.getTextCompletion()
     }
 }
