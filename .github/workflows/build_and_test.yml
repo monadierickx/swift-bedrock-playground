@@ -19,7 +19,9 @@ jobs:
       run: swift build
 
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    container: swift:6.0-noble
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v4
