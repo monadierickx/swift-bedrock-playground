@@ -1,0 +1,25 @@
+name: Build And Test on EC2
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: swift build
+
+  test:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Run tests
+      run: swift test
