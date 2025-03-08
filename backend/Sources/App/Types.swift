@@ -1,6 +1,8 @@
-import SwiftBedrockService
 import Hummingbird
 import Foundation
+
+import SwiftBedrockService
+import SwiftBedrockTypes
 
 extension TextCompletion: ResponseCodable {}
 

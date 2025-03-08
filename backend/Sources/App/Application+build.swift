@@ -1,6 +1,7 @@
 import Hummingbird
 import Logging
 import SwiftBedrockService
+import SwiftBedrockTypes
 
 /// Application arguments protocol. We use a protocol so we can call
 /// `buildApplication` inside Tests as well as in the App executable.

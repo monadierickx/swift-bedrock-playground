@@ -89,7 +89,7 @@ paths:
   #         description: Internal server error
 
   /foundation-models/text/{modelId}:
-    get:
+    post:
       summary: Invoke a specific text generation model by ID
       parameters:
         - name: modelId
@@ -126,7 +126,7 @@ paths:
           description: Internal server error
 
   /foundation-models/chat/{modelId}/: 
-    get:
+    post:
       summary: Chat with a specific model.
       operationId: chatWithModel
       parameters:

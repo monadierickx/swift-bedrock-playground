@@ -2,7 +2,9 @@
 import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
+
 import SwiftBedrockService
+import SwiftBedrockTypes
 
 public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
     public init() {}

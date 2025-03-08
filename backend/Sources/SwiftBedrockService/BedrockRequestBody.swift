@@ -1,6 +1,8 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
+import SwiftBedrockTypes
+
 struct BedrockRequest {
     let model: BedrockModel
     let contentType: String
@@ -53,5 +55,3 @@ struct BedrockRequest {
     }
 
 }
-
-public protocol BedrockBodyCodable: Codable {}

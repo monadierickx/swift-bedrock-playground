@@ -1,6 +1,6 @@
 import Foundation
 
-enum SwiftBedrockError: Error {
+public enum SwiftBedrockError: Error {
     case invalidMaxTokens(String)
     case invalidTemperature(String)
     case invalidPrompt(String)

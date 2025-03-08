@@ -7,7 +7,7 @@ let package = Package(
     name: "HummingbirdBackend",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     products: [
-        .executable(name: "App", targets: ["App"]),
+        .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
@@ -15,11 +15,11 @@ let package = Package(
         .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.25"),
         .package(url: "https://github.com/smithy-lang/smithy-swift", from: "0.118.0"),
         .package(url: "https://github.com/swiftlang/swift-testing", branch: "main"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.3")
-
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.3"),
     ],
     targets: [
-        .executableTarget(name: "App",
+        .executableTarget(
+            name: "App",
             dependencies: [
                 .target(name: "SwiftBedrockService"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
@@ -30,6 +30,7 @@ let package = Package(
         .target(
             name: "SwiftBedrockService",
             dependencies: [
+                .target(name: "SwiftBedrockTypes"),
                 .product(name: "AWSClientRuntime", package: "aws-sdk-swift"),
                 .product(name: "AWSBedrock", package: "aws-sdk-swift"),
                 .product(name: "AWSBedrockRuntime", package: "aws-sdk-swift"),
@@ -38,11 +39,15 @@ let package = Package(
             ],
             path: "Sources/SwiftBedrockService"
         ),
+        .target(
+            name: "SwiftBedrockTypes",
+            path: "Sources/SwiftBedrockTypes"
+        ),
         .testTarget(
             name: "SwiftBedrockServiceTests",
             dependencies: [
                 .target(name: "SwiftBedrockService"),
-                .product(name: "Testing", package: "swift-testing")
+                .product(name: "Testing", package: "swift-testing"),
             ],
             path: "Tests/SwiftBedrockServiceTests"
         ),

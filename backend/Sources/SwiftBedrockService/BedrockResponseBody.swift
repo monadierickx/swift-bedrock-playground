@@ -1,6 +1,8 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
+import SwiftBedrockTypes
+
 public struct BedrockResponse {
     let model: BedrockModel
     let contentType: String
@@ -41,8 +43,4 @@ public struct BedrockResponse {
             )
         }
     }
-}
-
-public protocol ContainsTextCompletion: Codable {
-    func getTextCompletion() throws -> TextCompletion
 }

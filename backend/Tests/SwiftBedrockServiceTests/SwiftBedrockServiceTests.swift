@@ -1,4 +1,5 @@
 import Testing
+@testable import SwiftBedrockTypes
 @testable import SwiftBedrockService
 
 @Suite("SwiftBedrockService Tests")

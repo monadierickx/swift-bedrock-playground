@@ -6,7 +6,7 @@ public enum ModelFamily: Sendable {
     case nova
     case meta
 
-    var description: String {
+    public var description: String {
         switch self {
         case .anthropic: return "anthropic"
         case .titan: return "titan"

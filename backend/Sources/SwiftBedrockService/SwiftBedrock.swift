@@ -5,6 +5,8 @@ import AWSSDKIdentity
 import Foundation
 import Logging
 
+import SwiftBedrockTypes
+
 public struct SwiftBedrock {
     let region: String
     private let bedrockClient: MyBedrockClientProtocol
