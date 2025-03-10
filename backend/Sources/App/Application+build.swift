@@ -106,8 +106,25 @@ func buildRouter() async throws -> Router<AppRequestContext> {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
             let input = try await request.decode(as: ImageGenerationInput.self, context: context)
-            return try await bedrock.generateImage(input.prompt, with: model)
-            // return "Done"
+            
+            var output: ImageGenerationOutput
+            if input.referenceImagePath == nil {
+                output = try await bedrock.generateImage(input.prompt, with: model)
+            } else {
+                let referenceImage = try getImageAsBase64(
+                    filePath: input.referenceImagePath!
+                )
+                output = try await bedrock.editImage(
+                    image: referenceImage, prompt: input.prompt, with: model)
+            }
+            // tmp: save an image to disk to check
+            let timeStamp = getTimestamp()
+            try savePNGToDisk(
+                data: output.images[0],
+                filePath:
+                    "./img/generated_images/\(timeStamp).png"
+            )
+            return output
         } catch {
             print(error)
             throw error

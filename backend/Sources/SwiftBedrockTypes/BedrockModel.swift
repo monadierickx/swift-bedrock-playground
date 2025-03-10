@@ -49,7 +49,7 @@ public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understan
                 outputModality: [.image])
         case BedrockModel.nova_canvas.rawValue:
             self.init(
-                rawValue: id, family: .nova, inputModality: [.image],
+                rawValue: id, family: .nova, inputModality: [.text, .image],
                 outputModality: [.image])
         default:
             throw SwiftBedrockError.invalidModel(

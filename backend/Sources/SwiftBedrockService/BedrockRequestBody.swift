@@ -48,19 +48,57 @@ struct BedrockRequest {
         self.init(model: model, body: body)
     }
 
-    // MARKIT: image
-    public static func createImageRequest(model: BedrockModel, prompt: String, nrOfImages: Int) throws -> BedrockRequest {
+    // MARKIT: text to image
+    public static func createTextToImageRequest(
+        model: BedrockModel, prompt: String, nrOfImages: Int
+    ) throws -> BedrockRequest {
         try .init(model: model, prompt: prompt, nrOfImages: nrOfImages)
     }
 
     private init(model: BedrockModel, prompt: String, nrOfImages: Int) throws {
+        guard model.inputModality.contains(.text) else {
+            throw SwiftBedrockError.invalidModel("Input modality of \(model.rawValue) is not text")
+        }
         guard model.outputModality.contains(.image) else {
-            throw SwiftBedrockError.invalidModel("Modality of \(model.rawValue) is not image")
+            throw SwiftBedrockError.invalidModel(
+                "Output modality of \(model.rawValue) is not image")
         }
         var body: BedrockBodyCodable
         switch model.family {
         case .titan, .nova:
-            body = AmazonImageRequestBody(prompt: prompt, nrOfImages: nrOfImages)
+            body = AmazonImageRequestBody.textToImage(prompt: prompt, nrOfImages: nrOfImages)
+        default:
+            throw SwiftBedrockError.invalidModel(model.rawValue)
+        }
+        self.init(model: model, body: body)
+    }
+
+    // MARKIT: image variation
+    public static func createImageVariationRequest(
+        model: BedrockModel, prompt: String, image: String, similarity: Double, nrOfImages: Int
+    ) throws -> BedrockRequest {
+        try .init(model: model, prompt: prompt, image: image, similarity: similarity, nrOfImages: nrOfImages)
+    }
+
+    private init(
+        model: BedrockModel, prompt: String, image: String, similarity: Double, nrOfImages: Int
+    ) throws {
+        guard model.inputModality.contains(.text) else {
+            throw SwiftBedrockError.invalidModel("Input modality of \(model.rawValue) is not text")
+        }
+        guard model.inputModality.contains(.image) else {
+            throw SwiftBedrockError.invalidModel("Input modality of \(model.rawValue) is not image")
+        }
+        guard model.outputModality.contains(.image) else {
+            throw SwiftBedrockError.invalidModel(
+                "Output modality of \(model.rawValue) is not image")
+        }
+        var body: BedrockBodyCodable
+        switch model.family {
+        case .titan, .nova:
+            body = AmazonImageRequestBody.imageVariation(
+                prompt: prompt, referenceImage: image, similarity: similarity,
+                nrOfImages: nrOfImages)
         default:
             throw SwiftBedrockError.invalidModel(model.rawValue)
         }

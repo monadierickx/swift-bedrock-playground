@@ -108,7 +108,6 @@ public struct SwiftBedrock: Sendable {
                     region: region.rawValue)
             bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
         }
-        // let _ = try await bedrockRuntimeClient
         return bedrockRuntimeClient
     }
 
@@ -155,6 +154,7 @@ public struct SwiftBedrock: Sendable {
     ///   - temperature: the temperature used to generate the completion (must be a value between 0 and 1) optional, default 0.6
     /// - Throws: SwiftBedrockError.invalidMaxTokens if maxTokens is less than 1
     ///           SwiftBedrockError.invalidTemperature if temperature is not between 0 and 1
+    ///           SwiftBedrockError.invalidPrompt if the prompt is empty
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a TextCompletion object containing the generated text from the model
     public func completeText(
@@ -218,6 +218,16 @@ public struct SwiftBedrock: Sendable {
         return try BedrockResponse.getTextCompletion()
     }
 
+
+    /// Generates 1 to 5 image(s) from a text prompt using a specific model.
+    /// - Parameters:
+    ///   - prompt: the prompt describing the image that should be generated
+    ///   - model: the BedrockModel that will be used to generate the image
+    ///   - nrOfImages: the number of images that will be generated (must be a number between 1 and 5) optional, default 3
+    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5 
+    ///           SwiftBedrockError.invalidPrompt if the prompt is empty
+    ///           SwiftBedrockError.invalidResponse if the response body is missing
+    /// - Returns: a ImageGenerationOutput object containing an array of generated images
     public func generateImage(
         _ prompt: String, with model: BedrockModel, nrOfImages: Int? = nil
     ) async throws -> ImageGenerationOutput {
@@ -230,11 +240,11 @@ public struct SwiftBedrock: Sendable {
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for speed
+        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for latency 
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
-            throw SwiftBedrockError.invalidMaxTokens(
+            throw SwiftBedrockError.invalidNrOfImages(
                 "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)")
         }
 
@@ -243,8 +253,86 @@ public struct SwiftBedrock: Sendable {
             throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
         }
 
-        let request: BedrockRequest = try BedrockRequest.createImageRequest(
+        let request: BedrockRequest = try BedrockRequest.createTextToImageRequest(
             model: model, prompt: prompt, nrOfImages: nrOfImages)
+        let input: InvokeModelInput = try request.getInvokeModelInput()
+        logger.trace(
+            "Sending request to invokeModel",
+            metadata: [
+                "model": .string(model.rawValue), "request": .string(String(describing: input)),
+            ])
+        let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
+        guard let responseBody = response.body else {
+            logger.debug(
+                "Invalid response",
+                metadata: [
+                    "response": .string(String(describing: response)),
+                    "hasBody": .stringConvertible(response.body != nil),
+                ])
+            throw SwiftBedrockError.invalidResponse(
+                "Something went wrong while extracting body from response.")
+        }
+
+        let decoder = JSONDecoder()
+        let output: ImageGenerationOutput = try decoder.decode(
+            ImageGenerationOutput.self, from: responseBody)
+
+        logger.trace(
+            "Generated image(s)",
+            metadata: [
+                "model": .string(model.rawValue),
+                "response": .string(String(describing: response)),
+                "images.count": .stringConvertible(output.images.count),
+            ])
+        return output
+    }
+
+    /// Generates 1 to 5 imagevariation(s) from reference images and a text prompt using a specific model.
+    /// - Parameters:
+    ///   - image: the reference images
+    ///   - prompt: the prompt describing the image that should be generated
+    ///   - model: the BedrockModel that will be used to generate the image
+    ///   - nrOfImages: the number of images that will be generated (must be a number between 1 and 5) optional, default 3
+    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5 
+    ///           SwiftBedrockError.similarity if similarity is not between 0 and 1
+    ///           SwiftBedrockError.invalidPrompt if the prompt is empty
+    ///           SwiftBedrockError.invalidResponse if the response body is missing
+    /// - Returns: a ImageGenerationOutput object containing an array of generated images
+    public func editImage(
+        image: String, prompt: String, with model: BedrockModel, similarity: Double? = nil, nrOfImages: Int? = nil
+    ) async throws -> ImageGenerationOutput {
+        logger.trace(
+            "Generating image(s) from reference image",
+            metadata: [
+                "model.id": .string(model.rawValue),
+                "model.family": .string(model.family.description),
+                "prompt": .string(prompt),
+                "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
+                "similarity": .stringConvertible(similarity ?? "not defined")
+            ])
+
+        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for speed
+        guard nrOfImages >= 1 && nrOfImages <= 5 else {
+            logger.debug(
+                "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
+            throw SwiftBedrockError.invalidNrOfImages(
+                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)")
+        }
+
+        let similarity = similarity ?? 0.5
+        guard similarity >= 0 && similarity <= 1 else {
+            logger.debug(
+                "Invalid similarity", metadata: ["similarity": .stringConvertible(similarity)])
+            throw SwiftBedrockError.invalidNrOfImages(
+                "Similarity should be between 0 and 1. similarity: \(similarity)")
+        }
+
+        guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
+            logger.debug("Invalid prompt", metadata: ["prompt": .string(prompt)])
+            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
+        }
+
+        let request: BedrockRequest = try BedrockRequest.createImageVariationRequest(model: model, prompt: prompt, image: image, similarity: similarity, nrOfImages: nrOfImages)
         let input: InvokeModelInput = try request.getInvokeModelInput()
         logger.trace(
             "Sending request to invokeModel",

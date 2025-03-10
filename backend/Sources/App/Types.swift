@@ -15,10 +15,18 @@ struct TextCompletionInput: Codable {
 struct ImageGenerationInput: Codable {
     let prompt: String
     let stylePreset: String?
+    let referenceImagePath: String?
 
     init(prompt: String, stylePreset: String? = "") {
         self.prompt = prompt
         self.stylePreset = stylePreset
+        self.referenceImagePath = nil
+    }
+
+    init(prompt: String, referenceImagePath: String) {
+        self.prompt = prompt
+        self.stylePreset = ""
+        self.referenceImagePath = referenceImagePath
     }
 }
 
