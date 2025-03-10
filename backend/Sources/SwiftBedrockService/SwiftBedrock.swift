@@ -12,16 +12,6 @@ public struct SwiftBedrock: Sendable {
     private let bedrockClient: MyBedrockClientProtocol
     private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
-    // static private func createLogger() -> Logger {
-    //     var logger: Logger = Logger(label: "swiftbedrock.service")
-    //     logger.logLevel =
-    //         ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
-    //             Logger.Level(rawValue: $0.lowercased())
-    //         } ?? .trace
-    //     return logger
-    // }
-
-    // static private func createBedrockClient(region: Region)
 
     public init(
         region: Region = .useast1,
@@ -29,17 +19,7 @@ public struct SwiftBedrock: Sendable {
         bedrockClient: MyBedrockClientProtocol? = nil,
         bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil
     ) async throws {
-        if logger == nil {
-            var logger: Logger = Logger(label: "swiftbedrock.service")
-            logger.logLevel =
-                ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
-                    Logger.Level(rawValue: $0.lowercased())
-                } ?? .trace
-            self.logger = logger
-            // self.logger = SwiftBedrock.createLogger()
-        } else {
-            self.logger = logger!
-        }
+        self.logger = logger ?? SwiftBedrock.createLogger("swiftbedrock.service")
         self.logger.trace(
             "Initializing SwiftBedrock", metadata: ["region": .string(region.rawValue)])
         self.region = region
@@ -50,51 +30,86 @@ public struct SwiftBedrock: Sendable {
             self.bedrockRuntimeClient = bedrockRuntimeClient!
         } else {
             self.logger.trace("Creating bedrockClient and bedrockRuntimeClient")
-
             var bedrockClient: MyBedrockClientProtocol
             var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
-
             do {
                 self.logger.trace("Attempting defaultChain")
-                let defaultResolver = try await BedrockClient.BedrockClientConfiguration(
-                    region: region.rawValue)
-                bedrockClient = BedrockClient(config: defaultResolver)
-                let _ = try await bedrockClient.listFoundationModels(
-                    input: ListFoundationModelsInput())
-                // self.bedrockClient = bedrockClient
+                bedrockClient = try await SwiftBedrock.createBedrockClient(region: region)
                 self.logger.trace("DefaultChain Succesfull")
-
-                let defaultRuntimeResolver =
-                    try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                        region: region.rawValue)
-                bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
+                self.logger.trace("Created bedrockClient using defaultChain")
+                bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
+                    region: region)
+                self.logger.trace("Created bedrockRuntimeClient using defaultChain")
             } catch {
                 self.logger.trace("DefaultChain not succesful")
                 self.logger.trace("Attempting SSO")
-                let identityResolver = try SSOAWSCredentialIdentityResolver()
-                let clientConfig = try await BedrockClient.BedrockClientConfiguration(
-                    region: region.rawValue)
-                clientConfig.awsCredentialIdentityResolver = identityResolver
-
-                bedrockClient = BedrockClient(config: clientConfig)
-                let _ = try await bedrockClient.listFoundationModels(
-                    input: ListFoundationModelsInput())
+                bedrockClient = try await SwiftBedrock.createBedrockClient(
+                    region: region, useSSO: true)
                 self.logger.trace("Created bedrockRuntimeClient using SSO")
-
-                let runtimeClientConfig =
-                    try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                        region: region.rawValue)
-                runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
-
-                bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
+                bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
+                    region: region, useSSO: true)
                 self.logger.trace("Created bedrockRuntimeClient using SSO")
             }
-
             self.bedrockClient = bedrockClient
             self.bedrockRuntimeClient = bedrockRuntimeClient
         }
         self.logger.trace(
             "Initialized SwiftBedrock", metadata: ["region": .string(region.rawValue)])
+    }
+
+    /// Creates Logger using either the loglevel saved as en environment variable `LOG_LEVEL` or with default `.trace`
+    static private func createLogger(_ name: String) -> Logger {
+        var logger: Logger = Logger(label: name)
+        logger.logLevel =
+            ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
+                Logger.Level(rawValue: $0.lowercased())
+            } ?? .trace
+        return logger
+    }
+
+    /// Creates a BedrockClient and verifies it
+    static private func createBedrockClient(region: Region, useSSO: Bool = false) async throws
+        -> MyBedrockClientProtocol
+    {
+        var bedrockClient: MyBedrockClientProtocol
+        if useSSO {
+            let identityResolver = try SSOAWSCredentialIdentityResolver()
+            let clientConfig = try await BedrockClient.BedrockClientConfiguration(
+                region: region.rawValue)
+            clientConfig.awsCredentialIdentityResolver = identityResolver
+
+            bedrockClient = BedrockClient(config: clientConfig)
+        } else {
+            let defaultResolver = try await BedrockClient.BedrockClientConfiguration(
+                region: region.rawValue)
+            bedrockClient = BedrockClient(config: defaultResolver)
+        }
+        let _ = try await bedrockClient.listFoundationModels(input: ListFoundationModelsInput())
+        return bedrockClient
+    }
+
+    /// Creates a BedrockRuntimeClient
+    static private func createBedrockRuntimeClient(region: Region, useSSO: Bool = false)
+        async throws
+        -> MyBedrockRuntimeClientProtocol
+    {
+        var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
+        if useSSO {
+            let identityResolver = try SSOAWSCredentialIdentityResolver()
+            let runtimeClientConfig =
+                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                    region: region.rawValue)
+            runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
+
+            bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
+        } else {
+            let defaultRuntimeResolver =
+                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                    region: region.rawValue)
+            bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
+        }
+        // let _ = try await bedrockRuntimeClient
+        return bedrockRuntimeClient
     }
 
     /// Lists all available foundation models from Amazon Bedrock
