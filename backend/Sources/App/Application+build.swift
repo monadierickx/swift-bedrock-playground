@@ -96,7 +96,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     }
 
     // POST /foundation-models/image/{modelId}
-    router.post("/foundation-models/image/:modelId") { request, context -> String in
+    router.post("/foundation-models/image/:modelId") { request, context -> ImageGenerationOutput in
         do {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
@@ -106,8 +106,8 @@ func buildRouter() async throws -> Router<AppRequestContext> {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
             let input = try await request.decode(as: ImageGenerationInput.self, context: context)
-            try await bedrock.generateImage(input.prompt, with: model)
-            return "Done"
+            return try await bedrock.generateImage(input.prompt, with: model)
+            // return "Done"
         } catch {
             print(error)
             throw error

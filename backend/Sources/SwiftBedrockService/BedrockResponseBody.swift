@@ -14,6 +14,10 @@ public struct BedrockResponse {
         self.body = body
     }
 
+    // public static func createTextResponse(body: Data, model: BedrockModel) throws -> BedrockResponse {
+    //     try .init(body: body, model: model)
+    // }
+
     public init(body data: Data, model: BedrockModel) throws {
         do {
             var body: ContainsTextCompletion

@@ -168,7 +168,7 @@ public struct SwiftBedrock: Sendable {
 
     public func generateImage(
         _ prompt: String, with model: BedrockModel, nrOfImages: Int? = nil
-    ) async throws {
+    ) async throws -> ImageGenerationOutput {
         logger.trace(
             "Generating image(s)",
             metadata: [
@@ -178,7 +178,7 @@ public struct SwiftBedrock: Sendable {
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 3
+        let nrOfImages = nrOfImages ?? 1 // FIXME: make 3, stays 1 for now for speed
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
@@ -210,13 +210,17 @@ public struct SwiftBedrock: Sendable {
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting body from response.")
         }
-        // let BedrockResponse: BedrockResponse = try BedrockResponse(
-        //     body: responseBody, model: model)
+
+        let decoder = JSONDecoder()
+        let output: ImageGenerationOutput = try decoder.decode(ImageGenerationOutput.self, from: responseBody)
+        
         logger.trace(
             "Generated image(s)",
             metadata: [
-                "model": .string(model.rawValue), "response": .string(String(describing: response)),
+                "model": .string(model.rawValue), 
+                "response": .string(String(describing: response)),
+                "images.count": .stringConvertible(output.images.count)
             ])
-        // return try BedrockResponse.getTextCompletion()
+        return output
     }
 }

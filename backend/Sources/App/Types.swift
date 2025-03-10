@@ -21,3 +21,5 @@ struct ImageGenerationInput: Codable {
         self.stylePreset = stylePreset
     }
 }
+
+extension ImageGenerationOutput: ResponseCodable {}
