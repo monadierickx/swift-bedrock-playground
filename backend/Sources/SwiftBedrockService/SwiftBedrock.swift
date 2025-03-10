@@ -12,6 +12,17 @@ public struct SwiftBedrock: Sendable {
     private let bedrockClient: MyBedrockClientProtocol
     private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
+    // static private func createLogger() -> Logger {
+    //     var logger: Logger = Logger(label: "swiftbedrock.service")
+    //     logger.logLevel =
+    //         ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
+    //             Logger.Level(rawValue: $0.lowercased())
+    //         } ?? .trace
+    //     return logger
+    // }
+
+    // static private func createBedrockClient(region: Region)
+
     public init(
         region: Region = .useast1,
         logger: Logger? = nil,
@@ -25,10 +36,12 @@ public struct SwiftBedrock: Sendable {
                     Logger.Level(rawValue: $0.lowercased())
                 } ?? .trace
             self.logger = logger
+            // self.logger = SwiftBedrock.createLogger()
         } else {
             self.logger = logger!
         }
-        self.logger.trace("Initializing SwiftBedrock", metadata: ["region": .string(region.rawValue)])
+        self.logger.trace(
+            "Initializing SwiftBedrock", metadata: ["region": .string(region.rawValue)])
         self.region = region
 
         if bedrockClient != nil && bedrockRuntimeClient != nil {
@@ -38,26 +51,50 @@ public struct SwiftBedrock: Sendable {
         } else {
             self.logger.trace("Creating bedrockClient and bedrockRuntimeClient")
 
-            // FIXME later: allow other methods -> maybe add to default chain? -> I don't think it is possible
-            let identityResolver = try SSOAWSCredentialIdentityResolver()
+            var bedrockClient: MyBedrockClientProtocol
+            var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
-            let clientConfig =
-                try await BedrockClient.BedrockClientConfiguration(
+            do {
+                self.logger.trace("Attempting defaultChain")
+                let defaultResolver = try await BedrockClient.BedrockClientConfiguration(
                     region: region.rawValue)
-            clientConfig.awsCredentialIdentityResolver = identityResolver
+                bedrockClient = BedrockClient(config: defaultResolver)
+                let _ = try await bedrockClient.listFoundationModels(
+                    input: ListFoundationModelsInput())
+                // self.bedrockClient = bedrockClient
+                self.logger.trace("DefaultChain Succesfull")
 
-            self.bedrockClient = BedrockClient(config: clientConfig)
-            self.logger.trace("Created bedrockClient")
-
-            let runtimeClientConfig =
-                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                let defaultRuntimeResolver =
+                    try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                        region: region.rawValue)
+                bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
+            } catch {
+                self.logger.trace("DefaultChain not succesful")
+                self.logger.trace("Attempting SSO")
+                let identityResolver = try SSOAWSCredentialIdentityResolver()
+                let clientConfig = try await BedrockClient.BedrockClientConfiguration(
                     region: region.rawValue)
-            runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
+                clientConfig.awsCredentialIdentityResolver = identityResolver
 
-            self.bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
-            self.logger.trace("Created bedrockRuntimeClient")
+                bedrockClient = BedrockClient(config: clientConfig)
+                let _ = try await bedrockClient.listFoundationModels(
+                    input: ListFoundationModelsInput())
+                self.logger.trace("Created bedrockRuntimeClient using SSO")
+
+                let runtimeClientConfig =
+                    try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                        region: region.rawValue)
+                runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
+
+                bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
+                self.logger.trace("Created bedrockRuntimeClient using SSO")
+            }
+
+            self.bedrockClient = bedrockClient
+            self.bedrockRuntimeClient = bedrockRuntimeClient
         }
-        self.logger.trace("Initialized SwiftBedrock", metadata: ["region": .string(region.rawValue)])
+        self.logger.trace(
+            "Initialized SwiftBedrock", metadata: ["region": .string(region.rawValue)])
     }
 
     /// Lists all available foundation models from Amazon Bedrock
@@ -178,7 +215,7 @@ public struct SwiftBedrock: Sendable {
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 1 // FIXME: make 3, stays 1 for now for speed
+        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for speed
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
@@ -212,14 +249,15 @@ public struct SwiftBedrock: Sendable {
         }
 
         let decoder = JSONDecoder()
-        let output: ImageGenerationOutput = try decoder.decode(ImageGenerationOutput.self, from: responseBody)
-        
+        let output: ImageGenerationOutput = try decoder.decode(
+            ImageGenerationOutput.self, from: responseBody)
+
         logger.trace(
             "Generated image(s)",
             metadata: [
-                "model": .string(model.rawValue), 
+                "model": .string(model.rawValue),
                 "response": .string(String(describing: response)),
-                "images.count": .stringConvertible(output.images.count)
+                "images.count": .stringConvertible(output.images.count),
             ])
         return output
     }
