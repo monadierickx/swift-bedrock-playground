@@ -11,3 +11,13 @@ struct TextCompletionInput: Codable {
     let maxTokens: Int?
     let temperature: Double?
 }
+
+struct ImageGenerationInput: Codable {
+    let prompt: String
+    let stylePreset: String?
+
+    init(prompt: String, stylePreset: String? = "") {
+        self.prompt = prompt
+        self.stylePreset = stylePreset
+    }
+}

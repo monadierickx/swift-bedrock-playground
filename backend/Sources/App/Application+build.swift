@@ -64,27 +64,50 @@ func buildRouter() async throws -> Router<AppRequestContext> {
         return "I am healthy!"
     }
 
+    // SwiftBedrock
+    let bedrock = try await SwiftBedrock()
+
     // List models
     // GET /foundation-models lists all models
     router.get("/foundation-models") { request, _ -> [ModelInfo] in
-        let bedrock = try await SwiftBedrock()
         return try await bedrock.listModels()
     }
 
     // POST /foundation-models/text/{modelId}
     router.post("/foundation-models/text/:modelId") { request, context -> TextCompletion in
         do {
-            let bedrock = try await SwiftBedrock()
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
             let model = try BedrockModel(modelId)  // FIXME: some check for the modelId
+            guard model.outputModality.contains(.text) else {
+                throw HTTPError(.badRequest, message: "Invalid modelId.")
+            }
             let input = try await request.decode(as: TextCompletionInput.self, context: context)
             return try await bedrock.completeText(
                 input.prompt,
                 with: model,
                 maxTokens: input.maxTokens,
                 temperature: input.temperature)
+        } catch {
+            print(error)
+            throw error
+        }
+    }
+
+    // POST /foundation-models/image/{modelId}
+    router.post("/foundation-models/image/:modelId") { request, context -> String in
+        do {
+            guard let modelId = context.parameters.get("modelId") else {
+                throw HTTPError(.badRequest, message: "Invalid modelId.")
+            }
+            let model = try BedrockModel(modelId)  // FIXME: some check for the modelId
+            guard model.outputModality.contains(.image) else {
+                throw HTTPError(.badRequest, message: "Invalid modelId.")
+            }
+            let input = try await request.decode(as: ImageGenerationInput.self, context: context)
+            try await bedrock.generateImage(input.prompt, with: model)
+            return "Done"
         } catch {
             print(error)
             throw error

@@ -1,6 +1,5 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
-
 import SwiftBedrockTypes
 
 struct BedrockRequest {
@@ -19,9 +18,19 @@ struct BedrockRequest {
         self.accept = accept
     }
 
-    public init(
+    // MARKIT: text
+    static func createTextRequest(
         model: BedrockModel, prompt: String, maxTokens: Int = 300, temperature: Double = 0.6
+    ) throws -> BedrockRequest {
+        try .init(model: model, prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+    }
+
+    private init(
+        model: BedrockModel, prompt: String, maxTokens: Int, temperature: Double
     ) throws {
+        guard model.outputModality.contains(.text) else {
+            throw SwiftBedrockError.invalidModel("Modality of \(model.rawValue) is not text")
+        }
         var body: BedrockBodyCodable
         switch model.family {
         case .anthropic:
@@ -33,6 +42,25 @@ struct BedrockRequest {
         case .nova:
             body = NovaRequestBody(
                 prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+        default:
+            throw SwiftBedrockError.invalidModel(model.rawValue)
+        }
+        self.init(model: model, body: body)
+    }
+
+    // MARKIT: image
+    public static func createImageRequest(model: BedrockModel, prompt: String, nrOfImages: Int) throws -> BedrockRequest {
+        try .init(model: model, prompt: prompt, nrOfImages: nrOfImages)
+    }
+
+    private init(model: BedrockModel, prompt: String, nrOfImages: Int) throws {
+        guard model.outputModality.contains(.image) else {
+            throw SwiftBedrockError.invalidModel("Modality of \(model.rawValue) is not image")
+        }
+        var body: BedrockBodyCodable
+        switch model.family {
+        case .titan, .nova:
+            body = AmazonImageRequestBody(prompt: prompt, nrOfImages: nrOfImages)
         default:
             throw SwiftBedrockError.invalidModel(model.rawValue)
         }

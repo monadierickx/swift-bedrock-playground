@@ -162,52 +162,46 @@ paths:
         '500':
           description: Internal server error
 
-  # /foundation-models/model/image/{modelId}/invoke: # currently only for one model
-  #   post:
-  #     summary: Invoke a specific image generation model by ID
-  #     parameters:
-  #       - name: modelId
-  #         in: path
-  #         required: true
-  #         schema:
-  #           type: string
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               prompt:
-  #                 type: string
-  #                 description: The text prompt for image generation.
-  #               stylePreset:
-  #                 type: string
-  #                 description: The style preset to apply to the generated image. Empty string for no style.
-  #             required:
-  #               - prompt
-  #     # headers:
-  #     #   Content-Type:
-  #     #     schema:
-  #     #       type: string
-  #     #       enum: ['application/json']
-  #     #     required: true
-  #     responses:
-  #       '200':
-  #         description: Successful response
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 imageByteArray:
-  #                   type: string
-  #                   format: string # check this 
-  #                   description: Base64 encoded PNG image data.
-  #       '400':
-  #         description: Bad request
-  #       '500':
-  #         description: Internal server error
+  /foundation-models/model/image/{modelId}/invoke: # currently only for one model
+    post:
+      summary: Invoke a specific image generation model by ID
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: The text prompt for image generation.
+                stylePreset:
+                  type: string
+                  description: The style preset to apply to the generated image. Empty string for no style.
+              required:
+                - prompt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageByteArray:
+                    type: string
+                    format: string # check this 
+                    description: Base64 encoded PNG image data.
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
 
   # /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical 
   #   post:

@@ -3,9 +3,9 @@ import AWSClientRuntime
 import AWSSDKIdentity
 import Foundation
 
-public protocol MyBedrockClientProtocol {
+public protocol MyBedrockClientProtocol: Sendable {
     func listFoundationModels(input: ListFoundationModelsInput) async throws
         -> ListFoundationModelsOutput
 }
 
-extension BedrockClient: MyBedrockClientProtocol {}
+extension BedrockClient: @retroactive @unchecked Sendable, MyBedrockClientProtocol {}

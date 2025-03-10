@@ -19,3 +19,9 @@ public struct TitanResponseBody: ContainsTextCompletion {
         let completionReason: String
     }
 }
+
+// public struct TitanImageResponseBody: ContainsImageCompletion {
+//     let images: [Data]
+// }
+
+// protocol ContainsImageCompletion: Decodable {}
