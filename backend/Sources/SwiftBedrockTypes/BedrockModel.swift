@@ -15,7 +15,10 @@
 
 import Foundation
 
-public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understand RawRepresentable and put back
+public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
+    public var rawValue: String { id }
+    public typealias RawValue = String
+
     public var id: String
     public let family: ModelFamily
     public let inputModality: [ModelModality]
@@ -31,8 +34,8 @@ public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understan
         self.outputModality = outputModality
     }
 
-    public init?(rawValue id: String) throws {
-        switch id {
+    public init?(rawValue: String) {
+        switch rawValue {
         case BedrockModel.claudev1.id:
             self = BedrockModel.claudev1 
         case BedrockModel.claudev2.id:

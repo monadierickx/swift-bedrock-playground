@@ -91,7 +91,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            guard let model = try BedrockModel(rawValue: modelId),
+            guard let model = BedrockModel(rawValue: modelId),
                 model.outputModality.contains(.image)
             else {
                 throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")
@@ -114,7 +114,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            guard let model = try BedrockModel(rawValue: modelId),
+            guard let model = BedrockModel(rawValue: modelId),
                 model.outputModality.contains(.image)
             else {
                 throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")

@@ -18,4 +18,8 @@ import Foundation
 public enum TaskType: String, Codable {
     case textToImage = "TEXT_IMAGE"
     case imageVariation = "IMAGE_VARIATION"
+    case colorGuidedGeneration = "COLOR_GUIDED_GENERATION"
+    case inpainting = "INPAINTING"
+    case outpainting = "OUTPAINTING"
+    case backgroundRemoval = "BACKGROUND_REMOVAL"
 }

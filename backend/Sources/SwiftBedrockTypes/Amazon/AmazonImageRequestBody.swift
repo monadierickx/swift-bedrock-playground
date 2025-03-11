@@ -50,6 +50,34 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
 
     public struct TextToImageParams: Codable {
         let text: String
+        let conditionImage: String?
+        let controlMode: ControlMode?
+        let controlStrength: Double?
+        let negativeText: String?
+
+        init(text: String) {
+            self.text = text
+            self.conditionImage = nil
+            self.controlMode = nil
+            self.controlStrength = nil
+            self.negativeText = nil
+        }
+
+        init(
+            text: String, conditionImage: String, controlMode: ControlMode? = nil,
+            controlStrength: Double? = nil, negativeText: String? = nil
+        ) {
+            self.text = text
+            self.conditionImage = conditionImage
+            self.controlMode = controlMode
+            self.controlStrength = controlStrength
+            self.negativeText = negativeText
+        }
+    }
+
+    public enum ControlMode: String, Codable {
+        case cannyEdge = "CANNY_EDGE"
+        case segmentation = "SEGMENTATION"
     }
 
     public struct ImageVariationParams: Codable {
