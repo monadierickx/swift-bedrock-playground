@@ -1,6 +1,7 @@
 import Testing
-@testable import SwiftBedrockTypes
+
 @testable import SwiftBedrockService
+@testable import SwiftBedrockTypes
 
 @Suite("SwiftBedrockService Tests")
 struct SwiftBedrockServiceTests {
@@ -45,12 +46,12 @@ struct SwiftBedrockServiceTests {
         )
         #expect(completion.completion == "This is the textcompletion for: This is a test")
     }
-    
+
     @Test(
         "Complete text using an unimplemented model",
         arguments: [
             BedrockModel.llama2_13b,
-            BedrockModel.llama2_70b
+            BedrockModel.llama2_70b,
         ])
     func completeTextWithInvalidModel(model: BedrockModel) async throws {
         await #expect(throws: SwiftBedrockError.self) {
@@ -105,7 +106,9 @@ struct SwiftBedrockServiceTests {
 
     @Test(
         "Complete text using a valid prompt",
-        arguments: ["This is a test", "!@#$%^&*()_+{}|:<>?", String(repeating: "test ", count: 1000)])
+        arguments: [
+            "This is a test", "!@#$%^&*()_+{}|:<>?", String(repeating: "test ", count: 1000),
+        ])
     func completeTextWithValidPrompt(prompt: String) async throws {
         let completion: TextCompletion = try await bedrock.completeText(
             prompt,
@@ -123,6 +126,71 @@ struct SwiftBedrockServiceTests {
                 prompt,
                 with: BedrockModel.nova_micro,
                 maxTokens: 10)
+        }
+    }
+
+    @Test(
+        "Complete text using an implemented model",
+        arguments: [
+            BedrockModel.titan_image_g1_v1,
+            BedrockModel.titan_image_g1_v2,
+            BedrockModel.nova_canvas,
+        ])
+    func generateImageWithValidModel(model: BedrockModel) async throws {
+        let output: ImageGenerationOutput = try await bedrock.generateImage(
+            "This is a text",
+            with: model,
+            nrOfImages: 3
+        )
+        #expect(output.images.count == 3)
+    }
+
+    @Test(
+        "Complete text using an implemented model",
+        arguments: [
+            BedrockModel.nova_micro,
+            BedrockModel.titan_text_g1_lite,
+            BedrockModel.titan_text_g1_express,
+            BedrockModel.titan_text_g1_premier,
+            BedrockModel.claudev3_haiku,
+            BedrockModel.claudev1,
+            BedrockModel.claudev2,
+            BedrockModel.claudev2_1,
+            BedrockModel.claudev3_haiku,
+            BedrockModel.claudev3_5_haiku,
+        ])
+    func generateImageWithInvalidModel(model: BedrockModel) async throws {
+        await #expect(throws: SwiftBedrockError.self) {
+            let _: ImageGenerationOutput = try await bedrock.generateImage(
+                "This is a text",
+                with: model,
+                nrOfImages: 3
+            )
+        }
+    }
+
+    @Test(
+        "Complete text using an implemented model",
+        arguments: [1, 2, 3, 4, 5])
+    func generateImageWithValidNrOfImages(nrOfImages: Int) async throws {
+        let output: ImageGenerationOutput = try await bedrock.generateImage(
+            "This is a test",
+            with: BedrockModel.nova_canvas,
+            nrOfImages: nrOfImages
+        )
+        #expect(output.images.count == nrOfImages)
+    }
+
+    @Test(
+        "Complete text using an implemented model",
+        arguments: [-2, 0, 6, 20])
+    func generateImageWithInvalidNrOfImages(nrOfImages: Int) async throws {
+        await #expect(throws: SwiftBedrockError.self) {
+            let _: ImageGenerationOutput = try await bedrock.generateImage(
+                "This is a text",
+                with: BedrockModel.nova_canvas,
+                nrOfImages: nrOfImages
+            )
         }
     }
 }
