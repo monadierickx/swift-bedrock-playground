@@ -240,7 +240,7 @@ public struct SwiftBedrock: Sendable {
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for latency
+        let nrOfImages = nrOfImages ?? 3
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
@@ -312,7 +312,7 @@ public struct SwiftBedrock: Sendable {
                 "similarity": .stringConvertible(similarity ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for speed
+        let nrOfImages = nrOfImages ?? 3
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
