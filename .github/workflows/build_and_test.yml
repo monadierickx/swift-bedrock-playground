@@ -15,8 +15,10 @@ jobs:
       - name: Manually Clone repository
         run: |
           # Clone the repository
-          git clone https://github.com/${{ github.repository }}
+          git clone https://${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           cd ${{ github.event.repository.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         working-directory: ${{ github.event.repository.name }}/backend
         run: swift build
