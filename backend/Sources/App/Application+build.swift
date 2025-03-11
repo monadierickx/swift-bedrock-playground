@@ -29,7 +29,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws
                 Logger.Level(rawValue: $0)
             } ?? .info
         return logger
-    }()
+    }() // FIXME: I don't like this 
     let router = try await buildRouter()
     let app = Application(
         router: router,
@@ -52,7 +52,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     // Add middleware
     router.addMiddleware {
         // logging middleware
-        LogRequestsMiddleware(.trace)
+        LogRequestsMiddleware(.trace) // FIXME: weird choice mona
     }
     // Add default endpoint
     router.get("/") { _, _ -> HTTPResponse.Status in
@@ -77,9 +77,9 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     router.post("/foundation-models/text/:modelId") { request, context -> TextCompletion in
         do {
             guard let modelId = context.parameters.get("modelId") else {
-                throw HTTPError(.badRequest, message: "Invalid modelId.")
+                throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            let model = try BedrockModel(modelId)  // FIXME: some check for the modelId
+            let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
             guard model.outputModality.contains(.text) else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
@@ -90,7 +90,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
                 maxTokens: input.maxTokens,
                 temperature: input.temperature)
         } catch {
-            print(error)
+            print(error) // use logger from HB 
             throw error
         }
     }
@@ -99,9 +99,9 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     router.post("/foundation-models/image/:modelId") { request, context -> ImageGenerationOutput in
         do {
             guard let modelId = context.parameters.get("modelId") else {
-                throw HTTPError(.badRequest, message: "Invalid modelId.")
+                throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            let model = try BedrockModel(modelId)  // FIXME: some check for the modelId
+            let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
             guard model.outputModality.contains(.image) else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
