@@ -26,6 +26,7 @@ public protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
     var logLevel: Logger.Level? { get }
+    var sso: Bool { get }
 }
 
 // Request context used by application
@@ -42,7 +43,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws
         arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap {
             Logger.Level(rawValue: $0)
         } ?? .info
-    let router = try await buildRouter()
+    let router = try await buildRouter(useSSO: arguments.sso)
     let app = Application(
         router: router,
         configuration: .init(
@@ -55,7 +56,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws
 }
 
 /// Build router
-func buildRouter() async throws -> Router<AppRequestContext> {
+func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
 
     // CORS
@@ -77,7 +78,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     }
 
     // SwiftBedrock
-    let bedrock = try await SwiftBedrock()
+    let bedrock = try await SwiftBedrock(useSSO: useSSO)
 
     // List models
     // GET /foundation-models lists all models

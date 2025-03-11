@@ -27,12 +27,12 @@ public struct SwiftBedrock: Sendable {
     private let bedrockClient: MyBedrockClientProtocol
     private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
-
     public init(
         region: Region = .useast1,
         logger: Logger? = nil,
         bedrockClient: MyBedrockClientProtocol? = nil,
-        bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil
+        bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil,
+        useSSO: Bool = false
     ) async throws {
         self.logger = logger ?? SwiftBedrock.createLogger("swiftbedrock.service")
         self.logger.trace(
@@ -45,28 +45,15 @@ public struct SwiftBedrock: Sendable {
             self.bedrockRuntimeClient = bedrockRuntimeClient!
         } else {
             self.logger.trace("Creating bedrockClient and bedrockRuntimeClient")
-            var bedrockClient: MyBedrockClientProtocol
-            var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
-            do {
-                self.logger.trace("Attempting defaultChain")
-                bedrockClient = try await SwiftBedrock.createBedrockClient(region: region)
-                self.logger.trace("DefaultChain Succesfull")
-                self.logger.trace("Created bedrockClient using defaultChain")
-                bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
-                    region: region)
-                self.logger.trace("Created bedrockRuntimeClient using defaultChain")
-            } catch {
-                self.logger.trace("DefaultChain not succesful")
-                self.logger.trace("Attempting SSO")
-                bedrockClient = try await SwiftBedrock.createBedrockClient(
-                    region: region, useSSO: true)
-                self.logger.trace("Created bedrockRuntimeClient using SSO")
-                bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
-                    region: region, useSSO: true)
-                self.logger.trace("Created bedrockRuntimeClient using SSO")
-            }
-            self.bedrockClient = bedrockClient
-            self.bedrockRuntimeClient = bedrockRuntimeClient
+            self.bedrockClient = try await SwiftBedrock.createBedrockClient(
+                region: region, useSSO: useSSO)
+            self.logger.trace(
+                "Created bedrockRuntimeClient", metadata: ["useSSO": .stringConvertible(useSSO)])
+            self.bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
+                region: region, useSSO: useSSO)
+            self.logger.trace(
+                "Created bedrockRuntimeClient", metadata: ["useSSO": .stringConvertible(useSSO)])
+
         }
         self.logger.trace(
             "Initialized SwiftBedrock", metadata: ["region": .string(region.rawValue)])
@@ -78,11 +65,11 @@ public struct SwiftBedrock: Sendable {
         logger.logLevel =
             ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
-            } ?? .trace // FIXME: trace for me, later .info
+            } ?? .trace  // FIXME: trace for me, later .info
         return logger
     }
 
-    /// Creates a BedrockClient and verifies it
+    /// Creates a BedrockClient
     static private func createBedrockClient(region: Region, useSSO: Bool = false) async throws
         -> MyBedrockClientProtocol
     {
@@ -99,7 +86,6 @@ public struct SwiftBedrock: Sendable {
                 region: region.rawValue)
             bedrockClient = BedrockClient(config: defaultResolver)
         }
-        let _ = try await bedrockClient.listFoundationModels(input: ListFoundationModelsInput())
         return bedrockClient
     }
 
@@ -233,13 +219,12 @@ public struct SwiftBedrock: Sendable {
         return try BedrockResponse.getTextCompletion()
     }
 
-
     /// Generates 1 to 5 image(s) from a text prompt using a specific model.
     /// - Parameters:
     ///   - prompt: the prompt describing the image that should be generated
     ///   - model: the BedrockModel that will be used to generate the image
     ///   - nrOfImages: the number of images that will be generated (must be a number between 1 and 5) optional, default 3
-    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5 
+    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5
     ///           SwiftBedrockError.invalidPrompt if the prompt is empty
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a ImageGenerationOutput object containing an array of generated images
@@ -255,7 +240,7 @@ public struct SwiftBedrock: Sendable {
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
             ])
 
-        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for latency 
+        let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for latency
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
                 "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
@@ -308,13 +293,14 @@ public struct SwiftBedrock: Sendable {
     ///   - prompt: the prompt describing the image that should be generated
     ///   - model: the BedrockModel that will be used to generate the image
     ///   - nrOfImages: the number of images that will be generated (must be a number between 1 and 5) optional, default 3
-    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5 
+    /// - Throws: SwiftBedrockError.invalidNrOfImages if nrOfImages is not between 1 and 5
     ///           SwiftBedrockError.similarity if similarity is not between 0 and 1
     ///           SwiftBedrockError.invalidPrompt if the prompt is empty
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a ImageGenerationOutput object containing an array of generated images
     public func editImage(
-        image: String, prompt: String, with model: BedrockModel, similarity: Double? = nil, nrOfImages: Int? = nil
+        image: String, prompt: String, with model: BedrockModel, similarity: Double? = nil,
+        nrOfImages: Int? = nil
     ) async throws -> ImageGenerationOutput {
         logger.trace(
             "Generating image(s) from reference image",
@@ -323,7 +309,7 @@ public struct SwiftBedrock: Sendable {
                 "model.family": .string(model.family.description),
                 "prompt": .string(prompt),
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
-                "similarity": .stringConvertible(similarity ?? "not defined")
+                "similarity": .stringConvertible(similarity ?? "not defined"),
             ])
 
         let nrOfImages = nrOfImages ?? 1  // FIXME: make 3, stays 1 for now for speed
@@ -347,7 +333,9 @@ public struct SwiftBedrock: Sendable {
             throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
         }
 
-        let request: BedrockRequest = try BedrockRequest.createImageVariationRequest(model: model, prompt: prompt, image: image, similarity: similarity, nrOfImages: nrOfImages)
+        let request: BedrockRequest = try BedrockRequest.createImageVariationRequest(
+            model: model, prompt: prompt, image: image, similarity: similarity,
+            nrOfImages: nrOfImages)
         let input: InvokeModelInput = try request.getInvokeModelInput()
         logger.trace(
             "Sending request to invokeModel",
