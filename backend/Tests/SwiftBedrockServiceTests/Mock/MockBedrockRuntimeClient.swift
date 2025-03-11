@@ -16,7 +16,7 @@ public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
         guard let inputBody = input.body else {
             throw AWSBedrockRuntime.ValidationException(message: "Malformed input request, please reformat your input and try again.")
         }
-        let model: BedrockModel = try BedrockModel(modelId)
+        let model: BedrockModel = try BedrockModel(rawValue: modelId)!
         switch model.family {
         case .nova:
             return InvokeModelOutput(body: try invokeNovaModel(body: inputBody))

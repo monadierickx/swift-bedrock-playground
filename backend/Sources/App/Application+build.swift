@@ -22,14 +22,11 @@ public func buildApplication(_ arguments: some AppArguments) async throws
     -> some ApplicationProtocol
 {
     let environment = Environment()
-    let logger = {
-        var logger = Logger(label: "HummingbirdBackend")
-        logger.logLevel =
-            arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap {
-                Logger.Level(rawValue: $0)
-            } ?? .info
-        return logger
-    }() // FIXME: I don't like this 
+    var logger = Logger(label: "HummingbirdBackend")
+    logger.logLevel =
+        arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap {
+            Logger.Level(rawValue: $0)
+        } ?? .info
     let router = try await buildRouter()
     let app = Application(
         router: router,
@@ -52,7 +49,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
     // Add middleware
     router.addMiddleware {
         // logging middleware
-        LogRequestsMiddleware(.trace) // FIXME: weird choice mona
+        LogRequestsMiddleware(.trace)  // FIXME: weird choice mona
     }
     // Add default endpoint
     router.get("/") { _, _ -> HTTPResponse.Status in
@@ -79,18 +76,19 @@ func buildRouter() async throws -> Router<AppRequestContext> {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
-            guard model!.outputModality.contains(.text) else {
-                throw HTTPError(.badRequest, message: "Invalid modelId.")
+            guard let model = try BedrockModel(rawValue: modelId),
+                model.outputModality.contains(.image)
+            else {
+                throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")
             }
             let input = try await request.decode(as: TextCompletionInput.self, context: context)
             return try await bedrock.completeText(
                 input.prompt,
-                with: model!,
+                with: model,
                 maxTokens: input.maxTokens,
                 temperature: input.temperature)
         } catch {
-            print(error) // use logger from HB 
+            // print(error)  // use logger from HB -> no access here 
             throw error
         }
     }
@@ -101,21 +99,22 @@ func buildRouter() async throws -> Router<AppRequestContext> {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
-            guard model!.outputModality.contains(.image) else {
-                throw HTTPError(.badRequest, message: "Invalid modelId.")
+            guard let model = try BedrockModel(rawValue: modelId),
+                model.outputModality.contains(.image)
+            else {
+                throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")
             }
             let input = try await request.decode(as: ImageGenerationInput.self, context: context)
-            
+
             var output: ImageGenerationOutput
             if input.referenceImagePath == nil {
-                output = try await bedrock.generateImage(input.prompt, with: model!)
+                output = try await bedrock.generateImage(input.prompt, with: model)
             } else {
                 let referenceImage = try getImageAsBase64(
                     filePath: input.referenceImagePath!
                 )
                 output = try await bedrock.editImage(
-                    image: referenceImage, prompt: input.prompt, with: model!)
+                    image: referenceImage, prompt: input.prompt, with: model)
             }
             // tmp: save an image to disk to check
             let timeStamp = getTimestamp()
@@ -126,7 +125,7 @@ func buildRouter() async throws -> Router<AppRequestContext> {
             )
             return output
         } catch {
-            print(error)
+            // print(error)
             throw error
         }
     }
