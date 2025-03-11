@@ -16,16 +16,16 @@
 import Foundation
 
 public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understand RawRepresentable and put back
-    public var rawValue: String
+    public var id: String
     public let family: ModelFamily
     public let inputModality: [ModelModality]
     public let outputModality: [ModelModality]
 
     public init(
-        rawValue: String, family: ModelFamily, inputModality: [ModelModality] = [.text],
+        id: String, family: ModelFamily, inputModality: [ModelModality] = [.text],
         outputModality: [ModelModality] = [.text]
     ) {
-        self.rawValue = rawValue  // CHECKME: id or rawValue? Id!! 
+        self.id = id
         self.family = family
         self.inputModality = inputModality
         self.outputModality = outputModality
@@ -33,59 +33,34 @@ public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understan
 
     public init?(rawValue id: String) throws {
         switch id {
-        case BedrockModel.claudev1.rawValue:
+        case BedrockModel.claudev1.id:
             self = BedrockModel.claudev1 
-        case BedrockModel.claudev2.rawValue:
-            self.init(rawValue: id, family: .anthropic)
-        case BedrockModel.claudev2_1.rawValue:
-            self.init(rawValue: id, family: .anthropic)
-        case BedrockModel.claudev3_haiku.rawValue:
-            self.init(rawValue: id, family: .anthropic)
-        case BedrockModel.claudev3_5_haiku.rawValue:
-            self.init(rawValue: id, family: .anthropic)
-        case BedrockModel.instant.rawValue:
-            self.init(rawValue: id, family: .anthropic)
-        case BedrockModel.titan_text_g1_premier.rawValue:
-            self.init(rawValue: id, family: .titan)
-        case BedrockModel.titan_text_g1_express.rawValue:
-            self.init(rawValue: id, family: .titan)
-        case BedrockModel.titan_text_g1_lite.rawValue:
-            self.init(rawValue: id, family: .titan)
-        case BedrockModel.nova_micro.rawValue:
-            self.init(rawValue: id, family: .nova)
-
-        case BedrockModel.titan_image_g1_v2.rawValue:
-            self.init(
-                rawValue: id, family: .titan, inputModality: [.text, .image],
-                outputModality: [.image])
-        case BedrockModel.titan_image_g1_v1.rawValue:
-            self.init(
-                rawValue: id, family: .titan, inputModality: [.text, .image],
-                outputModality: [.image])
-        case BedrockModel.nova_canvas.rawValue:
-            self.init(
-                rawValue: id, family: .nova, inputModality: [.text, .image],
-                outputModality: [.image])
+        case BedrockModel.claudev2.id:
+            self = BedrockModel.claudev2
+        case BedrockModel.claudev2_1.id:
+            self = BedrockModel.claudev2_1
+        case BedrockModel.claudev3_haiku.id:
+            self = BedrockModel.claudev3_haiku
+        case BedrockModel.claudev3_5_haiku.id:
+            self = BedrockModel.claudev3_5_haiku
+        case BedrockModel.instant.id:
+            self = BedrockModel.instant
+        case BedrockModel.titan_text_g1_premier.id:
+            self = BedrockModel.titan_text_g1_premier
+        case BedrockModel.titan_text_g1_express.id:
+            self = BedrockModel.titan_text_g1_express
+        case BedrockModel.titan_text_g1_lite.id:
+            self = BedrockModel.titan_text_g1_lite
+        case BedrockModel.nova_micro.id:
+            self = BedrockModel.nova_micro
+        case BedrockModel.titan_image_g1_v2.id:
+            self = BedrockModel.titan_image_g1_v2
+        case BedrockModel.titan_image_g1_v1.id:
+            self = BedrockModel.titan_image_g1_v1
+        case BedrockModel.nova_canvas.id:
+            self = BedrockModel.nova_canvas
         default:
             return nil
         }
     }
 }
-
-// FIXME: understand this
-// public extension BedrockModel {
-//     init?(from: String?) {
-//         guard let model = from else {
-//             return nil
-//         }
-//         self.init(rawValue: model)
-//         switch self {
-//         case .instant,
-//              .claudev1,
-//              .claudev2,
-//              .claudev2_1,
-//              .llama2_13b: return
-//         default: return nil
-//         }
-//     }
-// }

@@ -80,13 +80,13 @@ func buildRouter() async throws -> Router<AppRequestContext> {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
             let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
-            guard model.outputModality.contains(.text) else {
+            guard model!.outputModality.contains(.text) else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
             let input = try await request.decode(as: TextCompletionInput.self, context: context)
             return try await bedrock.completeText(
                 input.prompt,
-                with: model,
+                with: model!,
                 maxTokens: input.maxTokens,
                 temperature: input.temperature)
         } catch {
@@ -102,20 +102,20 @@ func buildRouter() async throws -> Router<AppRequestContext> {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
             let model = try BedrockModel(rawValue: modelId)  // FIXME: some check for the modelId
-            guard model.outputModality.contains(.image) else {
+            guard model!.outputModality.contains(.image) else {
                 throw HTTPError(.badRequest, message: "Invalid modelId.")
             }
             let input = try await request.decode(as: ImageGenerationInput.self, context: context)
             
             var output: ImageGenerationOutput
             if input.referenceImagePath == nil {
-                output = try await bedrock.generateImage(input.prompt, with: model)
+                output = try await bedrock.generateImage(input.prompt, with: model!)
             } else {
                 let referenceImage = try getImageAsBase64(
                     filePath: input.referenceImagePath!
                 )
                 output = try await bedrock.editImage(
-                    image: referenceImage, prompt: input.prompt, with: model)
+                    image: referenceImage, prompt: input.prompt, with: model!)
             }
             // tmp: save an image to disk to check
             let timeStamp = getTimestamp()

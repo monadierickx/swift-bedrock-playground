@@ -30,7 +30,7 @@ public struct BedrockResponse {
             case .nova:
                 body = try decoder.decode(NovaResponseBody.self, from: data)
             default:
-                throw SwiftBedrockError.invalidModel(model.rawValue)
+                throw SwiftBedrockError.invalidModel(model.id)
             }
             self.init(model: model, body: body)
         } catch {

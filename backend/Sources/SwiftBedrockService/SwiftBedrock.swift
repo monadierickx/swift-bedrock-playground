@@ -163,7 +163,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generating text completion",
             metadata: [
-                "model.id": .string(model.rawValue),
+                "model.id": .string(model.id),
                 "model.family": .string(model.family.description),
                 "prompt": .string(text),
                 "maxTokens": .stringConvertible(maxTokens ?? "not defined"),
@@ -195,7 +195,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
-                "model": .string(model.rawValue), "request": .string(String(describing: input)),
+                "model": .string(model.id), "request": .string(String(describing: input)),
             ])
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
@@ -213,7 +213,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generated text completion",
             metadata: [
-                "model": .string(model.rawValue), "response": .string(String(describing: response)),
+                "model": .string(model.id), "response": .string(String(describing: response)),
             ])
         return try BedrockResponse.getTextCompletion()
     }
@@ -234,7 +234,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generating image(s)",
             metadata: [
-                "model.id": .string(model.rawValue),
+                "model.id": .string(model.id),
                 "model.family": .string(model.family.description),
                 "prompt": .string(prompt),
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
@@ -259,7 +259,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
-                "model": .string(model.rawValue), "request": .string(String(describing: input)),
+                "model": .string(model.id), "request": .string(String(describing: input)),
             ])
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
@@ -280,7 +280,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generated image(s)",
             metadata: [
-                "model": .string(model.rawValue),
+                "model": .string(model.id),
                 "response": .string(String(describing: response)),
                 "images.count": .stringConvertible(output.images.count),
             ])
@@ -304,7 +304,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generating image(s) from reference image",
             metadata: [
-                "model.id": .string(model.rawValue),
+                "model.id": .string(model.id),
                 "model.family": .string(model.family.description),
                 "prompt": .string(prompt),
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
@@ -337,7 +337,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
-                "model": .string(model.rawValue), "request": .string(String(describing: input)),
+                "model": .string(model.id), "request": .string(String(describing: input)),
             ])
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
@@ -358,7 +358,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Generated image(s)",
             metadata: [
-                "model": .string(model.rawValue),
+                "model": .string(model.id),
                 "response": .string(String(describing: response)),
                 "images.count": .stringConvertible(output.images.count),
             ])
