@@ -1,3 +1,18 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Foundation Models Playground open source project
+//
+// Copyright (c) 2025 Amazon.com, Inc. or its affiliates
+//                    and the Swift Foundation Models Playground project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Foundation Models Playground project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import Foundation
 
 public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understand RawRepresentable and put back
@@ -10,16 +25,16 @@ public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understan
         rawValue: String, family: ModelFamily, inputModality: [ModelModality] = [.text],
         outputModality: [ModelModality] = [.text]
     ) {
-        self.rawValue = rawValue  // CHECKME: id or rawValue?
+        self.rawValue = rawValue  // CHECKME: id or rawValue? Id!! 
         self.family = family
         self.inputModality = inputModality
         self.outputModality = outputModality
     }
 
-    public init(_ id: String) throws {
+    public init?(rawValue id: String) throws {
         switch id {
         case BedrockModel.claudev1.rawValue:
-            self.init(rawValue: id, family: .anthropic)  // FIXME: do this but use your brain mona
+            self = BedrockModel.claudev1 
         case BedrockModel.claudev2.rawValue:
             self.init(rawValue: id, family: .anthropic)
         case BedrockModel.claudev2_1.rawValue:
@@ -52,8 +67,7 @@ public struct BedrockModel: Equatable, Hashable, Sendable {  // FIXME: understan
                 rawValue: id, family: .nova, inputModality: [.text, .image],
                 outputModality: [.image])
         default:
-            throw SwiftBedrockError.invalidModel(
-                "BedrockModel could not be initialized, because the modelId was not recognized")
+            return nil
         }
     }
 }

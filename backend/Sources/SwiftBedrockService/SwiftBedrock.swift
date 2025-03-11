@@ -63,7 +63,7 @@ public struct SwiftBedrock: Sendable {
         logger.logLevel =
             ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
-            } ?? .trace
+            } ?? .trace // FIXME: trace for me, later .info
         return logger
     }
 
