@@ -15,12 +15,10 @@ jobs:
       - name: Manually Clone repository
         run: |
           # Clone the repository
-          git clone https://${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          cd ${{ github.event.repository.name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" .
+          git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Build
-        working-directory: ${{ github.event.repository.name }}/backend
+        working-directory: backend
         run: swift build
 
   # test:
