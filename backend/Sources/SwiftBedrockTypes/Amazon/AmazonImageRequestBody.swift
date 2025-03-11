@@ -16,7 +16,7 @@
 import Foundation
 
 public struct AmazonImageRequestBody: BedrockBodyCodable {
-    let taskType: String
+    let taskType: TaskType
     let textToImageParams: TextToImageParams?
     let imageVariationParams: ImageVariationParams?
     let imageGenerationConfig: ImageGenerationConfig
@@ -26,7 +26,7 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
     }
 
     private init(prompt: String, nrOfImages: Int) {
-        self.taskType = "TEXT_IMAGE"
+        self.taskType = .textToImage
         self.textToImageParams = TextToImageParams(text: prompt)
         self.imageVariationParams = nil
         self.imageGenerationConfig = ImageGenerationConfig(nrOfImages: nrOfImages)
@@ -41,7 +41,7 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
     }
 
     private init(prompt: String, referenceImage: String, similarity: Double, nrOfImages: Int) {
-        self.taskType = "IMAGE_VARIATION"
+        self.taskType = .imageVariation
         self.textToImageParams = nil
         self.imageVariationParams = ImageVariationParams(
             text: prompt, referenceImage: referenceImage, similarity: similarity)
