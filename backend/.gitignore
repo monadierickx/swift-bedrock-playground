@@ -9,4 +9,4 @@ xcuserdata/
 !/.vscode/hummingbird.code-snippets
 .env.*
 .env
-backend/img/generated_images
+/img/generated_images
