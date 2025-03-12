@@ -10,3 +10,4 @@ xcuserdata/
 .env.*
 .env
 /img/generated_images
+/.vscode
