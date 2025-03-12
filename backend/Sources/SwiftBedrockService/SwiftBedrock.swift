@@ -222,7 +222,7 @@ public struct SwiftBedrock: Sendable {
             "Fetched foundation models",
             metadata: [
                 "models.count": "\(modelsInfo.count)"
-                // "models.content": .stringConvertible(modelsInfo),
+                    // "models.content": .stringConvertible(modelsInfo),
             ]
         )
         return modelsInfo
