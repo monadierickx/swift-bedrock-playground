@@ -231,7 +231,7 @@ public struct SwiftBedrock: Sendable {
             ]
         )
         do {
-            let response = try await self.bedrockRuntimeClient.invokeModel(input: input)  
+            let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
             // FIXME: how to best catch these error?
 
             // if let bodyString = String(data: response.body!, encoding: .utf8) {

@@ -22,7 +22,9 @@ public struct TitanRequestBody: BedrockBodyCodable {
     public init(prompt: String, maxTokens: Int, temperature: Double) {
         self.inputText = prompt
         self.textGenerationConfig = TextGenerationConfig(
-            maxTokenCount: maxTokens, temperature: temperature)
+            maxTokenCount: maxTokens,
+            temperature: temperature
+        )
     }
 
     public struct TextGenerationConfig: Codable {
