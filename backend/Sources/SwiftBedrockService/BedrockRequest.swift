@@ -36,13 +36,13 @@ struct BedrockRequest {
     }
 
     // MARK: text
-    /// Creates a text request with the specified parameters
+    /// Creates a BedrockRequest for a text request with the specified parameters
     /// - Parameters:
     ///   - model: The Bedrock model to use
     ///   - prompt: The input text prompt
     ///   - maxTokens: Maximum number of tokens to generate (default: 300)
     ///   - temperature: Temperature for text generation (default: 0.6)
-    /// - Returns: A configured BedrockRequest
+    /// - Returns: A configured BedrockRequest for a text request
     /// - Throws: SwiftBedrockError if the model doesn't support text output
     static func createTextRequest(
         model: BedrockModel,
@@ -59,8 +59,10 @@ struct BedrockRequest {
         maxTokens: Int,
         temperature: Double
     ) throws {
-        guard model.outputModality.contains(.text) else {
-            throw SwiftBedrockError.invalidModel("Modality of \(model.id) is not text")
+        guard model.supports(input: .text, output: .text) else {
+            throw SwiftBedrockError.invalidModel(
+                "Modality of \(model.id) not as expected: input: \(model.inputModality), output: \(model.outputModality)"
+            )
         }
         var body: BedrockBodyCodable
         switch model.family {
@@ -95,7 +97,7 @@ struct BedrockRequest {
     }
 
     // MARK: text to image
-    /// Creates a text-to-image request with the specified parameters
+    /// Creates a BedrockRequest for a text-to-image request with the specified parameters
     /// - Parameters:
     ///   - model: The Bedrock model to use for image generation
     ///   - prompt: The text description of the image to generate
@@ -111,12 +113,9 @@ struct BedrockRequest {
     }
 
     private init(model: BedrockModel, prompt: String, nrOfImages: Int) throws {
-        guard model.inputModality.contains(.text) else {
-            throw SwiftBedrockError.invalidModel("Input modality of \(model.id) is not text")
-        }
-        guard model.outputModality.contains(.image) else {
+        guard model.supports(input: .text, output: .image) else {
             throw SwiftBedrockError.invalidModel(
-                "Output modality of \(model.id) is not image"
+                "Modality of \(model.id) not as expected: input: \(model.inputModality), output: \(model.outputModality)"
             )
         }
         var body: BedrockBodyCodable
@@ -130,7 +129,7 @@ struct BedrockRequest {
     }
 
     // MARK: image variation
-    /// Creates a request to generate variations of an existing image
+    /// Creates a BedrockRequest for a request to generate variations of an existing image
     /// - Parameters:
     ///   - model: The Bedrock model to use for image variation generation
     ///   - prompt: The text description to guide the variation generation
@@ -156,15 +155,9 @@ struct BedrockRequest {
         similarity: Double,
         nrOfImages: Int
     ) throws {
-        guard model.inputModality.contains(.text) else {
-            throw SwiftBedrockError.invalidModel("Input modality of \(model.id) is not text")
-        }
-        guard model.inputModality.contains(.image) else {
-            throw SwiftBedrockError.invalidModel("Input modality of \(model.id) is not image")
-        }
-        guard model.outputModality.contains(.image) else {
+        guard model.supports(input: [.text, .image], output: [.image]) else {
             throw SwiftBedrockError.invalidModel(
-                "Output modality of \(model.id) is not image"
+                "Modality of \(model.id) not as expected: input: \(model.inputModality), output: \(model.outputModality)"
             )
         }
         var body: BedrockBodyCodable
@@ -182,6 +175,9 @@ struct BedrockRequest {
         self.init(model: model, body: body)
     }
 
+    /// Creates an InvokeModelInput instance for making a request to Amazon Bedrock
+    /// - Returns: A configured InvokeModelInput containing the model ID, content type, and encoded request body
+    /// - Throws: SwiftBedrockError.encodingError if the request body cannot be encoded to JSON
     public func getInvokeModelInput() throws -> InvokeModelInput {
         do {
             let jsonData: Data = try JSONEncoder().encode(self.body)

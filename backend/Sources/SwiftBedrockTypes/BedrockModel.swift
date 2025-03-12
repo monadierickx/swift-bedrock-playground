@@ -24,6 +24,12 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
     public let inputModality: [ModelModality]
     public let outputModality: [ModelModality]
 
+    /// Creates a new BedrockModel instance
+    /// - Parameters:
+    ///   - id: The unique identifier for the model
+    ///   - family: The model family this model belongs to
+    ///   - inputModality: Array of supported input modalities (defaults to [.text])
+    ///   - outputModality: Array of supported output modalities (defaults to [.text])
     public init(
         id: String,
         family: ModelFamily,
@@ -36,6 +42,9 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
         self.outputModality = outputModality
     }
 
+    /// Creates a BedrockModel instance from a raw string value
+    /// - Parameter rawValue: The model identifier string
+    /// - Returns: The corresponding BedrockModel instance, or nil if the identifier is not recognized
     public init?(rawValue: String) {
         switch rawValue {
         case BedrockModel.instant.id:
@@ -71,5 +80,27 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
         default:
             return nil
         }
+    }
+
+    /// Checks if the model supports specific input and output modalities
+    /// - Parameters:
+    ///   - inputs: The required input modalities
+    ///   - outputs: The required output modalities
+    /// - Returns: True if the model supports all specified modalities
+    public func supports(input: [ModelModality], output: [ModelModality]) -> Bool {
+        input.allSatisfy { inputModality.contains($0) } && output.allSatisfy { outputModality.contains($0) }
+    }
+
+    /// Checks if the model supports specific input and output modalities
+    /// - Parameters:
+    ///   - input: The required input modality
+    ///   - output: The required output modality
+    /// - Returns: True if the model supports the specified modalities
+    public func supports(input: ModelModality, output: ModelModality) -> Bool {
+        inputModality.contains(input) && outputModality.contains(output)
+    }
+
+    public var description: String {
+        "BedrockModel(id: \(id), family: \(family), input: \(inputModality), output: \(outputModality))"
     }
 }

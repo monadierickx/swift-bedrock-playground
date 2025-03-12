@@ -20,11 +20,6 @@ public struct NovaResponseBody: ContainsTextCompletion {
     let stopReason: String
     let usage: Usage
 
-    //    private init(from data: Data) throws {
-    //        let decoder = JSONDecoder()
-    //        self = try decoder.decode(NovaResponseBody.self, from: data)
-    //    }
-
     public func getTextCompletion() throws -> TextCompletion {
         TextCompletion(output.message.content[0].text)
     }
@@ -38,7 +33,7 @@ public struct NovaResponseBody: ContainsTextCompletion {
         let role: Role
     }
 
-    struct Content: Codable {  // FIXME: DRY
+    struct Content: Codable {
         let text: String
     }
 

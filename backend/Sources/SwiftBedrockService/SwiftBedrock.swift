@@ -27,6 +27,16 @@ public struct SwiftBedrock: Sendable {
     private let bedrockClient: MyBedrockClientProtocol
     private let bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
 
+    // MARK: - Initialization
+
+    /// Initializes a new SwiftBedrock instance
+    /// - Parameters:
+    ///   - region: The AWS region to use (defaults to .useast1)
+    ///   - logger: Optional custom logger instance
+    ///   - bedrockClient: Optional custom Bedrock client
+    ///   - bedrockRuntimeClient: Optional custom Bedrock Runtime client
+    ///   - useSSO: Whether to use SSO authentication (defaults to false)
+    /// - Throws: Error if client initialization fails
     public init(
         region: Region = .useast1,
         logger: Logger? = nil,
@@ -71,6 +81,8 @@ public struct SwiftBedrock: Sendable {
         )
     }
 
+    // MARK: - Private Helpers
+
     /// Creates Logger using either the loglevel saved as en environment variable `LOG_LEVEL` or with default `.trace`
     static private func createLogger(_ name: String) -> Logger {
         var logger: Logger = Logger(label: name)
@@ -88,16 +100,16 @@ public struct SwiftBedrock: Sendable {
     ) async throws
         -> MyBedrockClientProtocol
     {
-        let clientConfig = try await BedrockClient.BedrockClientConfiguration(
+        let config = try await BedrockClient.BedrockClientConfiguration(
             region: region.rawValue
         )
         if useSSO {
-            clientConfig.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver()
+            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver()
         }
-        return BedrockClient(config: clientConfig)
+        return BedrockClient(config: config)
     }
 
-    /// Creates a BedrockRuntimeClient // FIXME: clean-up
+    /// Creates a BedrockRuntimeClient
     static private func createBedrockRuntimeClient(
         region: Region,
         useSSO: Bool = false
@@ -105,25 +117,77 @@ public struct SwiftBedrock: Sendable {
         async throws
         -> MyBedrockRuntimeClientProtocol
     {
-        var bedrockRuntimeClient: MyBedrockRuntimeClientProtocol
+        let config =
+            try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
+                region: region.rawValue
+            )
         if useSSO {
-            let identityResolver = try SSOAWSCredentialIdentityResolver()
-            let runtimeClientConfig =
-                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                    region: region.rawValue
-                )
-            runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
-
-            bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
-        } else {
-            let defaultRuntimeResolver =
-                try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                    region: region.rawValue
-                )
-            bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
+            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver()
         }
-        return bedrockRuntimeClient
+        return BedrockRuntimeClient(config: config)
     }
+
+    /// Validate maxTokens is at least 1
+    private func validateMaxTokens(_ maxTokens: Int) throws {
+        guard maxTokens >= 1 else {
+            logger.debug(
+                "Invalid maxTokens",
+                metadata: ["maxTokens": .stringConvertible(maxTokens)]
+            )
+            throw SwiftBedrockError.invalidMaxTokens(
+                "MaxTokens should be at least 1. MaxTokens: \(maxTokens)"
+            )
+        }
+    }
+
+    /// Validate temperature is between 0 and 1
+    private func validateTemperature(_ temperature: Double) throws {
+        guard temperature >= 0 && temperature <= 1 else {
+            logger.debug(
+                "Invalid temperature",
+                metadata: ["temperature": "\(temperature)"]
+            )
+            throw SwiftBedrockError.invalidTemperature(
+                "Temperature should be a value between 0 and 1. Temperature: \(temperature)"
+            )
+        }
+    }
+
+    /// Validate prompt is not empty and does not consist of only whitespaces, tabs or newlines
+    private func validatePrompt(_ prompt: String) throws {
+        guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
+            logger.debug("Invalid prompt", metadata: ["prompt": .string(prompt)])
+            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
+        }
+    }
+
+    /// Validate nrOfImages is between 1 and 5
+    private func validateNrOfImages(_ nrOfImages: Int) throws {
+        guard nrOfImages >= 1 && nrOfImages <= 5 else {
+            logger.debug(
+                "Invalid nrOfImages",
+                metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
+            )
+            throw SwiftBedrockError.invalidNrOfImages(
+                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)"
+            )
+        }
+    }
+
+    /// Validate similarity is between 1 and 5
+    private func validateSimilarity(_ similarity: Double) throws {
+        guard similarity >= 0 && similarity <= 1 else {
+            logger.debug(
+                "Invalid similarity",
+                metadata: ["similarity": .stringConvertible(similarity)]
+            )
+            throw SwiftBedrockError.invalidNrOfImages(
+                "Similarity should be between 0 and 1. similarity: \(similarity)"
+            )
+        }
+    }
+
+    // MARK: Public Methods
 
     /// Lists all available foundation models from Amazon Bedrock
     /// - Throws: SwiftBedrockError.invalidResponse
@@ -157,7 +221,7 @@ public struct SwiftBedrock: Sendable {
         logger.trace(
             "Fetched foundation models",
             metadata: [
-                "models.count": .stringConvertible(modelsInfo.count)
+                "models.count": "\(modelsInfo.count)"
                 // "models.content": .stringConvertible(modelsInfo),
             ]
         )
@@ -190,49 +254,30 @@ public struct SwiftBedrock: Sendable {
                 "maxTokens": .stringConvertible(maxTokens ?? "not defined"),
             ]
         )
-        let maxTokens = maxTokens ?? 300
-        guard maxTokens >= 1 else {
-            logger.debug(
-                "Invalid maxTokens",
-                metadata: ["maxTokens": .stringConvertible(maxTokens)]
-            )
-            throw SwiftBedrockError.invalidMaxTokens(
-                "MaxTokens should be at least 1. MaxTokens: \(maxTokens)"
-            )
-        }
-
-        let temperature = temperature ?? 0.6
-        guard temperature >= 0 && temperature <= 1 else {
-            logger.debug(
-                "Invalid temperature",
-                metadata: ["temperature": .stringConvertible(temperature)]
-            )
-            throw SwiftBedrockError.invalidTemperature(
-                "Temperature should be a value between 0 and 1. Temperature: \(temperature)"
-            )
-        }
-
-        guard !text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
-            logger.debug("Invalid prompt", metadata: ["prompt": .string(text)])
-            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
-        }
-
-        let request: BedrockRequest = try BedrockRequest.createTextRequest(
-            model: model,
-            prompt: text,
-            maxTokens: maxTokens,
-            temperature: temperature
-        )
-        let input: InvokeModelInput = try request.getInvokeModelInput()
-        logger.trace(
-            "Sending request to invokeModel",
-            metadata: [
-                "model": .string(model.id), "request": .string(String(describing: input)),
-            ]
-        )
+        // FIXME: how to best catch these errors?
         do {
+            let maxTokens = maxTokens ?? 300
+            try validateMaxTokens(maxTokens)
+
+            let temperature = temperature ?? 0.6
+            try validateTemperature(temperature)
+
+            try validatePrompt(text)
+
+            let request: BedrockRequest = try BedrockRequest.createTextRequest(
+                model: model,
+                prompt: text,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
+            let input: InvokeModelInput = try request.getInvokeModelInput()
+            logger.trace(
+                "Sending request to invokeModel",
+                metadata: [
+                    "model": .string(model.id), "request": .string(String(describing: input)),
+                ]
+            )
             let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
-            // FIXME: how to best catch these error?
 
             // if let bodyString = String(data: response.body!, encoding: .utf8) {
             //     logger.info("Body as String: \(bodyString)")
@@ -268,7 +313,7 @@ public struct SwiftBedrock: Sendable {
             )
             return try bedrockResponse.getTextCompletion()
         } catch {
-            logger.debug("Error: \(error)")
+            logger.debug("Error while completing text", metadata: ["error": "\(error)"])
             throw error
         }
     }
@@ -298,20 +343,8 @@ public struct SwiftBedrock: Sendable {
         )
 
         let nrOfImages = nrOfImages ?? 3
-        guard nrOfImages >= 1 && nrOfImages <= 5 else {
-            logger.debug(
-                "Invalid nrOfImages",
-                metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
-            )
-            throw SwiftBedrockError.invalidNrOfImages(
-                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)"
-            )
-        }
-
-        guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
-            logger.debug("Invalid prompt", metadata: ["prompt": .string(prompt)])
-            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
-        }
+        try validateNrOfImages(nrOfImages)
+        try validatePrompt(prompt)
 
         let request: BedrockRequest = try BedrockRequest.createTextToImageRequest(
             model: model,
@@ -386,31 +419,12 @@ public struct SwiftBedrock: Sendable {
         )
 
         let nrOfImages = nrOfImages ?? 3
-        guard nrOfImages >= 1 && nrOfImages <= 5 else {
-            logger.debug(
-                "Invalid nrOfImages",
-                metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
-            )
-            throw SwiftBedrockError.invalidNrOfImages(
-                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)"
-            )
-        }
+        try validateNrOfImages(nrOfImages)
 
         let similarity = similarity ?? 0.5
-        guard similarity >= 0 && similarity <= 1 else {
-            logger.debug(
-                "Invalid similarity",
-                metadata: ["similarity": .stringConvertible(similarity)]
-            )
-            throw SwiftBedrockError.invalidNrOfImages(
-                "Similarity should be between 0 and 1. similarity: \(similarity)"
-            )
-        }
+        try validateSimilarity(similarity)
 
-        guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
-            logger.debug("Invalid prompt", metadata: ["prompt": .string(prompt)])
-            throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
-        }
+        try validatePrompt(prompt)
 
         let request: BedrockRequest = try BedrockRequest.createImageVariationRequest(
             model: model,

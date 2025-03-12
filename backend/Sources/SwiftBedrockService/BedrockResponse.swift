@@ -28,10 +28,12 @@ public struct BedrockResponse {
         self.body = body
     }
 
-    // public static func createTextResponse(body: Data, model: BedrockModel) throws -> BedrockResponse {
-    //     try .init(body: body, model: model)
-    // }
-
+    /// Creates a BedrockResponse from raw response data
+    /// - Parameters:
+    ///   - data: The raw response data from the Bedrock service
+    ///   - model: The Bedrock model that generated the response
+    /// - Throws: SwiftBedrockError.invalidModel if the model is not supported
+    ///          SwiftBedrockError.invalidResponseBody if the response cannot be decoded
     public init(body data: Data, model: BedrockModel) throws {
         do {
             var body: ContainsTextCompletion
@@ -54,6 +56,9 @@ public struct BedrockResponse {
         }
     }
 
+    /// Extracts the text completion from the response body
+    /// - Returns: The text completion from the response
+    /// - Throws: SwiftBedrockError.decodingError if the completion cannot be extracted
     public func getTextCompletion() throws -> TextCompletion {
         do {
             return try body.getTextCompletion()

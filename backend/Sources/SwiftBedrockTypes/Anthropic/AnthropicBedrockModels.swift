@@ -39,7 +39,8 @@ extension BedrockModel {
     )
 
     // FIXME: inference profile issue
-    // `Invocation of model ID anthropic.claude-3-5-haiku-20241022-v1:0 with on-demand throughput isn’t supported. Retry your request with the ID or ARN of an inference profile that contains this model.`
+    // `Invocation of model ID anthropic.claude-3-5-haiku-20241022-v1:0 with on-demand throughput isn’t supported. 
+    // Retry your request with the ID or ARN of an inference profile that contains this model.`
 
     public static let claudev3_5_haiku: BedrockModel = BedrockModel(
         id: "anthropic.claude-3-5-haiku-20241022-v1:0",
