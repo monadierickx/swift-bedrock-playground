@@ -35,14 +35,14 @@ paths:
   /:
     get:
       responses:
-        '200':
+        "200":
           description: Status ok, without message
-  
+
   /health:
     get:
       operationId: greet
       responses:
-        '200':
+        "200":
           description: An 'I am healthy!' message
           content:
             application/json:
@@ -54,17 +54,17 @@ paths:
       operationId: getFoundationModels
       summary: Get all available models
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ModelInfo'
-        '400':
+                  $ref: "#/components/schemas/ModelInfo"
+        "400":
           description: Bad request
-        '500':
+        "500":
           description: Internal server error
 
   # /foundation-models/{model_id}:
@@ -106,12 +106,12 @@ paths:
               properties:
                 prompt:
                   type: string
-                temperature: 
+                temperature:
                   type: number
-                maxTokens: 
+                maxTokens:
                   type: integer
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
@@ -120,12 +120,12 @@ paths:
                 properties:
                   completion:
                     type: string
-        '400':
+        "400":
           description: Bad request
-        '500':
+        "500":
           description: Internal server error
 
-  /foundation-models/chat/{modelId}/: 
+  /foundation-models/chat/{modelId}/:
     post:
       summary: Chat with a specific model.
       operationId: chatWithModel
@@ -148,7 +148,7 @@ paths:
               required:
                 - prompt
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
@@ -156,13 +156,13 @@ paths:
                 type: object
                 properties:
                   completion:
-                    type: string # DRY
-        '400':
+                    type: string      # DRY
+        "400":
           description: Bad request
-        '500':
+        "500":
           description: Internal server error
 
-  /foundation-models/model/image/{modelId}/invoke: # currently only for one model
+  /foundation-models/model/image/{modelId}/invoke:      # currently only for one model
     post:
       summary: Invoke a specific image generation model by ID
       parameters:
@@ -187,7 +187,7 @@ paths:
               required:
                 - prompt
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
@@ -196,14 +196,14 @@ paths:
                 properties:
                   imageByteArray:
                     type: string
-                    format: string # check this 
+                    format: string      # check this
                     description: Base64 encoded PNG image data.
-        '400':
+        "400":
           description: Bad request
-        '500':
+        "500":
           description: Internal server error
 
-  # /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical 
+  # /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical
   #   post:
   #     summary: Invoke a specific video generation model by ID
   #     parameters:
@@ -236,7 +236,7 @@ paths:
   #     #     required: true
   #     responses:
   #       '200':
-  #         description: Successful response  # think about how to return 
+  #         description: Successful response  # think about how to return
   #         content:
   #           application/json:
   #             schema:
