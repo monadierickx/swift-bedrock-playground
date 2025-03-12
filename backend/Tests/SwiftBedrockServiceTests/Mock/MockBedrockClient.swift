@@ -23,10 +23,12 @@ import SwiftBedrockTypes
 public struct MockBedrockClient: MyBedrockClientProtocol {
     public init() {}
 
-    public func listFoundationModels(input: ListFoundationModelsInput) async throws
+    public func listFoundationModels(
+        input: ListFoundationModelsInput
+    ) async throws
         -> ListFoundationModelsOutput
     {
-        return ListFoundationModelsOutput(
+        ListFoundationModelsOutput(
             modelSummaries: [
                 BedrockClientTypes.FoundationModelSummary(
                     modelId: "anthropic.claude-instant-v1",

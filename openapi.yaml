@@ -203,50 +203,50 @@ paths:
         "500":
           description: Internal server error
 
-  # /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical
-  #   post:
-  #     summary: Invoke a specific video generation model by ID
-  #     parameters:
-  #       - name: modelId
-  #         in: path
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: The ID of the video generation model to use.
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               prompt:
-  #                 type: string
-  #               referenceImage:
-  #                 type: string
-  #                 format: string # check this
-  #                 description: Optional reference image for the video generation.
-  #             required:
-  #               - prompt
-  #     # headers:
-  #     #   Content-Type:
-  #     #     schema:
-  #     #       type: string
-  #     #       enum: ['application/json']
-  #     #     required: true
-  #     responses:
-  #       '200':
-  #         description: Successful response  # think about how to return
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 url:
-  #                   type: string
-  #                 handle:
-  #                   type: string
-  #       '400':
-  #         description: Bad request
-  #       '500':
-  #         description: Internal server error
+# /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical
+#   post:
+#     summary: Invoke a specific video generation model by ID
+#     parameters:
+#       - name: modelId
+#         in: path
+#         required: true
+#         schema:
+#           type: string
+#         description: The ID of the video generation model to use.
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#               prompt:
+#                 type: string
+#               referenceImage:
+#                 type: string
+#                 format: string # check this
+#                 description: Optional reference image for the video generation.
+#             required:
+#               - prompt
+#     # headers:
+#     #   Content-Type:
+#     #     schema:
+#     #       type: string
+#     #       enum: ['application/json']
+#     #     required: true
+#     responses:
+#       '200':
+#         description: Successful response  # think about how to return
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               properties:
+#                 url:
+#                   type: string
+#                 handle:
+#                   type: string
+#       '400':
+#         description: Bad request
+#       '500':
+#         description: Internal server error

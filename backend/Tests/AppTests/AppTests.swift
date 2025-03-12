@@ -16,7 +16,7 @@
 // import Hummingbird
 // import HummingbirdTesting
 // import Logging
-// import XCTest // FIXME swift6 testing 
+// import XCTest // FIXME swift6 testing
 
 // @testable import App
 
@@ -35,7 +35,7 @@
 //             try await client.execute(uri: "/health", method: .get) { response in
 //                 XCTAssertEqual(response.body, ByteBuffer(string: "I am healthy!"))
 //             }
-            
+
 //             try await client.execute(uri: "/foundation-models", method: .get) { response in
 //                 XCTAssertEqual(response.status, .ok)
 //             }
