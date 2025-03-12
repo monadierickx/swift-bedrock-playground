@@ -35,7 +35,15 @@ struct BedrockRequest {
         self.accept = accept
     }
 
-    // MARKIT: text
+    // MARK: text
+    /// Creates a text request with the specified parameters
+    /// - Parameters:
+    ///   - model: The Bedrock model to use
+    ///   - prompt: The input text prompt
+    ///   - maxTokens: Maximum number of tokens to generate (default: 300)
+    ///   - temperature: Temperature for text generation (default: 0.6)
+    /// - Returns: A configured BedrockRequest
+    /// - Throws: SwiftBedrockError if the model doesn't support text output
     static func createTextRequest(
         model: BedrockModel,
         prompt: String,
@@ -86,7 +94,14 @@ struct BedrockRequest {
         self.init(model: model, body: body)
     }
 
-    // MARKIT: text to image
+    // MARK: text to image
+    /// Creates a text-to-image request with the specified parameters
+    /// - Parameters:
+    ///   - model: The Bedrock model to use for image generation
+    ///   - prompt: The text description of the image to generate
+    ///   - nrOfImages: The number of images to generate
+    /// - Returns: A configured BedrockRequest for image generation
+    /// - Throws: SwiftBedrockError if the model doesn't support text input or image output
     public static func createTextToImageRequest(
         model: BedrockModel,
         prompt: String,
@@ -114,7 +129,16 @@ struct BedrockRequest {
         self.init(model: model, body: body)
     }
 
-    // MARKIT: image variation
+    // MARK: image variation
+    /// Creates a request to generate variations of an existing image
+    /// - Parameters:
+    ///   - model: The Bedrock model to use for image variation generation
+    ///   - prompt: The text description to guide the variation generation
+    ///   - image: The base64-encoded string of the source image to create variations from
+    ///   - similarity: A value between 0 and 1 indicating how similar the variations should be to the source image
+    ///   - nrOfImages: The number of image variations to generate
+    /// - Returns: A configured BedrockRequest for image variation generation
+    /// - Throws: SwiftBedrockError if the model doesn't support text and image input, or image output
     public static func createImageVariationRequest(
         model: BedrockModel,
         prompt: String,

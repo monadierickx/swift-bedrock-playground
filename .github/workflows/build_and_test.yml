@@ -2,9 +2,9 @@ name: Build And Test on EC2
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -25,28 +25,27 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container: swift:6.0.3-amazonlinux2
-    
+
     steps:
       # GitHub checkout action has a dep on NodeJS 20 which is not running on Amazonlinux2
       # workaround is to manually checkout the repository
       # https://github.com/actions/checkout/issues/1487
-    - name: Manually Clone repository
-      run: |
-        git clone https://github.com/${{ github.repository }}
-        cd ${{ github.event.repository.name }}
-    - name: Run tests
-      working-directory: ${{ github.event.repository.name }}/backend
-      run: swift test
-  
-  # soundness:
-  #   name: Soundness
-  #   uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
-  #   with:
-  #     license_header_check_enabled: true
-  #     license_header_check_project_name: "Swift Foundation Models Playground"
-  #     shell_check_enabled: false
-  #     python_lint_check_enabled: false
-  #     api_breakage_check_container_image: "swift:6.0.3-amazonlinux2"
-  #     docs_check_container_image: "swift:6.0.3-amazonlinux2"
-  #     format_check_container_image: "swiftlang/swift:nightly-6.0-jammy"
-  #     yamllint_check_enabled: true
+      - name: Manually Clone repository
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+      - name: Run tests
+        working-directory: backend
+        run: swift test
+
+  soundness:
+    name: Soundness
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+    with:
+      license_header_check_enabled: true
+      license_header_check_project_name: "Swift Foundation Models Playground"
+      shell_check_enabled: false
+      python_lint_check_enabled: false
+      api_breakage_check_container_image: "swift:6.0.3-amazonlinux2"
+      docs_check_container_image: "swift:6.0.3-amazonlinux2"
+      format_check_container_image: "swiftlang/swift:nightly-6.0-jammy"
+      yamllint_check_enabled: true
