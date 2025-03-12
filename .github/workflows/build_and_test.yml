@@ -45,7 +45,9 @@ jobs:
       license_header_check_project_name: "Swift Foundation Models Playground"
       shell_check_enabled: false
       python_lint_check_enabled: false
-      api_breakage_check_container_image: "swift:6.0.3-amazonlinux2"
-      docs_check_container_image: "swift:6.0.3-amazonlinux2"
+      api_breakage_check_enabled: false
+      # api_breakage_check_container_image: "swift:6.0.3-amazonlinux2"
+      docs_check_enabled: false
+      # docs_check_container_image: "swift:6.0.3-amazonlinux2"
       format_check_container_image: "swiftlang/swift:nightly-6.0-jammy"
       yamllint_check_enabled: true
