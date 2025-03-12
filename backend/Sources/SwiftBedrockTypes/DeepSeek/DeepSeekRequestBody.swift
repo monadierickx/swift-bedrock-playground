@@ -15,20 +15,21 @@
 
 import Foundation
 
-public enum ModelFamily: Sendable {
-    case anthropic
-    case titan
-    case nova
-    case meta
-    case deepseek
+public struct DeepSeekRequestBody: BedrockBodyCodable {
+    let inferenceConfig: InferenceConfig
+    let messages: [Message]
 
-    public var description: String {
-        switch self {
-        case .anthropic: return "anthropic"
-        case .titan: return "titan"
-        case .nova: return "nova"
-        case .meta: return "meta"
-        case .deepseek: return "deepseek"
-        }
+    public init(prompt: String, maxTokens: Int, temperature: Double) {
+        self.inferenceConfig = InferenceConfig(max_tokens: maxTokens)
+        self.messages = [Message(role: .user, content: prompt)]
+    }
+
+    struct InferenceConfig: Codable {
+        let max_tokens: Int
+    }
+
+    struct Message: Codable {
+        let role: Role
+        let content: String
     }
 }

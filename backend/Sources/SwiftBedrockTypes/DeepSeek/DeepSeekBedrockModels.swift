@@ -15,20 +15,6 @@
 
 import Foundation
 
-public enum ModelFamily: Sendable {
-    case anthropic
-    case titan
-    case nova
-    case meta
-    case deepseek
-
-    public var description: String {
-        switch self {
-        case .anthropic: return "anthropic"
-        case .titan: return "titan"
-        case .nova: return "nova"
-        case .meta: return "meta"
-        case .deepseek: return "deepseek"
-        }
-    }
+public extension BedrockModel {
+    static let deepseek_r1_v1: BedrockModel = BedrockModel(id: "deepseek.r1-v1:0", family: .deepseek)
 }

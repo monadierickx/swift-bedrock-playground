@@ -36,8 +36,10 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
 
     public init?(rawValue: String) {
         switch rawValue {
+        case BedrockModel.instant.id:
+            self = BedrockModel.instant
         case BedrockModel.claudev1.id:
-            self = BedrockModel.claudev1 
+            self = BedrockModel.claudev1
         case BedrockModel.claudev2.id:
             self = BedrockModel.claudev2
         case BedrockModel.claudev2_1.id:
@@ -46,8 +48,8 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
             self = BedrockModel.claudev3_haiku
         case BedrockModel.claudev3_5_haiku.id:
             self = BedrockModel.claudev3_5_haiku
-        case BedrockModel.instant.id:
-            self = BedrockModel.instant
+        // case BedrockModel.claudev3_5_sonnet_v2.id:
+        //     self = BedrockModel.claudev3_5_sonnet_v2
         case BedrockModel.titan_text_g1_premier.id:
             self = BedrockModel.titan_text_g1_premier
         case BedrockModel.titan_text_g1_express.id:
@@ -62,6 +64,8 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
             self = BedrockModel.titan_image_g1_v1
         case BedrockModel.nova_canvas.id:
             self = BedrockModel.nova_canvas
+        case BedrockModel.deepseek_r1_v1.id:
+            self = BedrockModel.deepseek_r1_v1
         default:
             return nil
         }

@@ -44,6 +44,8 @@ public struct BedrockResponse {
                 body = try decoder.decode(TitanResponseBody.self, from: data)
             case .nova:
                 body = try decoder.decode(NovaResponseBody.self, from: data)
+            case .deepseek:
+                body = try decoder.decode(DeepSeekResponseBody.self, from: data)
             default:
                 throw SwiftBedrockError.invalidModel(model.id)
             }

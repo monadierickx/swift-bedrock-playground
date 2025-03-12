@@ -57,6 +57,9 @@ struct BedrockRequest {
         case .nova:
             body = NovaRequestBody(
                 prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+        case .deepseek:
+            body = DeepSeekRequestBody(
+                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
         default:
             throw SwiftBedrockError.invalidModel(model.id)
         }

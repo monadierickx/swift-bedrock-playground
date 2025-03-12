@@ -48,11 +48,11 @@ public struct SwiftBedrock: Sendable {
             self.bedrockClient = try await SwiftBedrock.createBedrockClient(
                 region: region, useSSO: useSSO)
             self.logger.trace(
-                "Created bedrockRuntimeClient", metadata: ["useSSO": .stringConvertible(useSSO)])
+                "Created bedrockRuntimeClient", metadata: ["useSSO": "\(useSSO)"])
             self.bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
                 region: region, useSSO: useSSO)
             self.logger.trace(
-                "Created bedrockRuntimeClient", metadata: ["useSSO": .stringConvertible(useSSO)])
+                "Created bedrockRuntimeClient", metadata: ["useSSO": "\(useSSO)"])
 
         }
         self.logger.trace(
@@ -73,23 +73,15 @@ public struct SwiftBedrock: Sendable {
     static private func createBedrockClient(region: Region, useSSO: Bool = false) async throws
         -> MyBedrockClientProtocol
     {
-        var bedrockClient: MyBedrockClientProtocol
+        let clientConfig = try await BedrockClient.BedrockClientConfiguration(
+                region: region.rawValue)
         if useSSO {
-            let identityResolver = try SSOAWSCredentialIdentityResolver()
-            let clientConfig = try await BedrockClient.BedrockClientConfiguration(
-                region: region.rawValue)
-            clientConfig.awsCredentialIdentityResolver = identityResolver
-
-            bedrockClient = BedrockClient(config: clientConfig)
-        } else {
-            let defaultResolver = try await BedrockClient.BedrockClientConfiguration(
-                region: region.rawValue)
-            bedrockClient = BedrockClient(config: defaultResolver)
+            clientConfig.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver()
         }
-        return bedrockClient
+        return BedrockClient(config: clientConfig)
     }
 
-    /// Creates a BedrockRuntimeClient
+    /// Creates a BedrockRuntimeClient // FIXME: clean-up
     static private func createBedrockRuntimeClient(region: Region, useSSO: Bool = false)
         async throws
         -> MyBedrockRuntimeClientProtocol
@@ -198,7 +190,18 @@ public struct SwiftBedrock: Sendable {
             metadata: [
                 "model": .string(model.id), "request": .string(String(describing: input)),
             ])
-        let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
+        do {
+        let response = try await self.bedrockRuntimeClient.invokeModel(input: input) // FIXME: how to best catch these error?
+
+        // if let bodyString = String(data: response.body!, encoding: .utf8) {
+        //     logger.info("Body as String: \(bodyString)")
+        // }
+
+        logger.trace(
+            "Received response from invokeModel",
+            metadata: [
+                "model": .string(model.id), "response": .string(String(describing: response)),
+            ])
         guard let responseBody = response.body else {
             logger.debug(
                 "Invalid response",
@@ -209,14 +212,18 @@ public struct SwiftBedrock: Sendable {
             throw SwiftBedrockError.invalidResponse(
                 "Something went wrong while extracting body from response.")
         }
-        let BedrockResponse: BedrockResponse = try BedrockResponse(
+        let bedrockResponse: BedrockResponse = try BedrockResponse(
             body: responseBody, model: model)
         logger.trace(
             "Generated text completion",
             metadata: [
-                "model": .string(model.id), "response": .string(String(describing: response)),
+                "model": .string(model.id), "response": .string(String(describing: bedrockResponse)),
             ])
-        return try BedrockResponse.getTextCompletion()
+        return try bedrockResponse.getTextCompletion()
+        } catch {
+            logger.debug("Error: \(error)")
+            throw error
+        }
     }
 
     /// Generates 1 to 5 image(s) from a text prompt using a specific model.

@@ -92,10 +92,11 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
             guard let modelId = context.parameters.get("modelId") else {
                 throw HTTPError(.badRequest, message: "No modelId found.")
             }
-            guard let model = BedrockModel(rawValue: modelId),
-                model.outputModality.contains(.image)
-            else {
+            guard let model = BedrockModel(rawValue: modelId) else {
                 throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")
+            }
+            guard model.outputModality.contains(.text) else {
+                throw HTTPError(.badRequest, message: "Model \(modelId) does not support text output.")
             }
             let input = try await request.decode(as: TextCompletionInput.self, context: context)
             return try await bedrock.completeText(

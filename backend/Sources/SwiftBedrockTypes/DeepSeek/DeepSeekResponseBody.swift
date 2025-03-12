@@ -15,20 +15,16 @@
 
 import Foundation
 
-public enum ModelFamily: Sendable {
-    case anthropic
-    case titan
-    case nova
-    case meta
-    case deepseek
+public struct DeepSeekResponseBody: ContainsTextCompletion {
+    let choices: [Choice]
 
-    public var description: String {
-        switch self {
-        case .anthropic: return "anthropic"
-        case .titan: return "titan"
-        case .nova: return "nova"
-        case .meta: return "meta"
-        case .deepseek: return "deepseek"
-        }
+    struct Choice: Codable {
+        let text: String
+        let stop_reason: String
     }
+
+    public func getTextCompletion() throws -> TextCompletion {
+        return TextCompletion(self.choices[0].text) // FIXME: do we want the first or the last? 
+    }
+
 }
