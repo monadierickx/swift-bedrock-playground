@@ -19,7 +19,9 @@ import AWSSDKIdentity
 import Foundation
 
 public protocol MyBedrockClientProtocol: Sendable {
-    func listFoundationModels(input: ListFoundationModelsInput) async throws
+    func listFoundationModels(
+        input: ListFoundationModelsInput
+    ) async throws
         -> ListFoundationModelsOutput
 }
 

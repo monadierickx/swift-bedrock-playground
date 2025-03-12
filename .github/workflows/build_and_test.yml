@@ -12,6 +12,9 @@ jobs:
     container: swift:6.0.3-amazonlinux2
 
     steps:
+      # GitHub checkout action has a dep on NodeJS 20 which is not running on Amazonlinux2
+      # workaround is to manually checkout the repository
+      # https://github.com/actions/checkout/issues/1487
       - name: Manually Clone repository
         run: |
           git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" .
@@ -25,6 +28,9 @@ jobs:
     container: swift:6.0.3-amazonlinux2
     
     steps:
+      # GitHub checkout action has a dep on NodeJS 20 which is not running on Amazonlinux2
+      # workaround is to manually checkout the repository
+      # https://github.com/actions/checkout/issues/1487
     - name: Manually Clone repository
       run: |
         git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" .

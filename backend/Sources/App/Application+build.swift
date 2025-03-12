@@ -34,7 +34,9 @@ typealias AppRequestContext = BasicRequestContext
 
 ///  Build application
 /// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments) async throws
+public func buildApplication(
+    _ arguments: some AppArguments
+) async throws
     -> some ApplicationProtocol
 {
     let environment = Environment()
@@ -69,12 +71,12 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
     }
     // Add default endpoint
     router.get("/") { _, _ -> HTTPResponse.Status in
-        return .ok
+        .ok
     }
 
     // Healthcheck
     router.get("/health") { _, _ -> String in
-        return "I am healthy!"
+        "I am healthy!"
     }
 
     // SwiftBedrock
@@ -83,7 +85,7 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
     // List models
     // GET /foundation-models lists all models
     router.get("/foundation-models") { request, _ -> [ModelInfo] in
-        return try await bedrock.listModels()
+        try await bedrock.listModels()
     }
 
     // POST /foundation-models/text/{modelId}
@@ -103,9 +105,10 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
                 input.prompt,
                 with: model,
                 maxTokens: input.maxTokens,
-                temperature: input.temperature)
+                temperature: input.temperature
+            )
         } catch {
-            // print(error)  // use logger from HB -> no access here 
+            // print(error)  // use logger from HB -> no access here
             throw error
         }
     }
@@ -131,7 +134,10 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
                     filePath: input.referenceImagePath!
                 )
                 output = try await bedrock.editImage(
-                    image: referenceImage, prompt: input.prompt, with: model)
+                    image: referenceImage,
+                    prompt: input.prompt,
+                    with: model
+                )
             }
             // tmp: save an image to disk to check
             let timeStamp = getTimestamp()

@@ -24,7 +24,7 @@ public struct DeepSeekResponseBody: ContainsTextCompletion {
     }
 
     public func getTextCompletion() throws -> TextCompletion {
-        return TextCompletion(self.choices[0].text) // FIXME: do we want the first or the last? 
+        TextCompletion(self.choices[0].text)  // FIXME: do we want the first or the last?// FIXME: do we want the first or the last?
     }
 
 }

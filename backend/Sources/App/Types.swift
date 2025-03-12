@@ -13,8 +13,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
 import Foundation
+import Hummingbird
 import SwiftBedrockService
 import SwiftBedrockTypes
 

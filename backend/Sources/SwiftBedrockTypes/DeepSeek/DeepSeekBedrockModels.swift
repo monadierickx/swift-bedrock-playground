@@ -15,6 +15,6 @@
 
 import Foundation
 
-public extension BedrockModel {
-    static let deepseek_r1_v1: BedrockModel = BedrockModel(id: "deepseek.r1-v1:0", family: .deepseek)
+extension BedrockModel {
+    public static let deepseek_r1_v1: BedrockModel = BedrockModel(id: "deepseek.r1-v1:0", family: .deepseek)
 }

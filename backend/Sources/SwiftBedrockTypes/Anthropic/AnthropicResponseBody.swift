@@ -25,10 +25,10 @@ public struct AnthropicResponseBody: ContainsTextCompletion {
     let stop_sequence: String?
     let usage: Usage
 
-//    private init(from data: Data) throws {
-//        let decoder = JSONDecoder()
-//        self = try decoder.decode(AnthropicResponseBody.self, from: data)
-//    }
+    //    private init(from data: Data) throws {
+    //        let decoder = JSONDecoder()
+    //        self = try decoder.decode(AnthropicResponseBody.self, from: data)
+    //    }
 
     public func getTextCompletion() throws -> TextCompletion {
         guard let completion = self.content[0].text else {

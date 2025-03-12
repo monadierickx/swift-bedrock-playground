@@ -22,7 +22,7 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
     let imageGenerationConfig: ImageGenerationConfig
 
     public static func textToImage(prompt: String, nrOfImages: Int = 3) -> Self {
-        return AmazonImageRequestBody(prompt: prompt, nrOfImages: nrOfImages)
+        AmazonImageRequestBody(prompt: prompt, nrOfImages: nrOfImages)
     }
 
     private init(prompt: String, nrOfImages: Int) {
@@ -33,18 +33,27 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
     }
 
     public static func imageVariation(
-        prompt: String, referenceImage: String, similarity: Double = 0.6, nrOfImages: Int = 3
+        prompt: String,
+        referenceImage: String,
+        similarity: Double = 0.6,
+        nrOfImages: Int = 3
     ) -> Self {
-        return AmazonImageRequestBody(
-            prompt: prompt, referenceImage: referenceImage, similarity: similarity,
-            nrOfImages: nrOfImages)
+        AmazonImageRequestBody(
+            prompt: prompt,
+            referenceImage: referenceImage,
+            similarity: similarity,
+            nrOfImages: nrOfImages
+        )
     }
 
     private init(prompt: String, referenceImage: String, similarity: Double, nrOfImages: Int) {
         self.taskType = .imageVariation
         self.textToImageParams = nil
         self.imageVariationParams = ImageVariationParams(
-            text: prompt, referenceImage: referenceImage, similarity: similarity)
+            text: prompt,
+            referenceImage: referenceImage,
+            similarity: similarity
+        )
         self.imageGenerationConfig = ImageGenerationConfig(nrOfImages: nrOfImages)
     }
 
@@ -64,8 +73,11 @@ public struct AmazonImageRequestBody: BedrockBodyCodable {
         }
 
         init(
-            text: String, conditionImage: String, controlMode: ControlMode? = nil,
-            controlStrength: Double? = nil, negativeText: String? = nil
+            text: String,
+            conditionImage: String,
+            controlMode: ControlMode? = nil,
+            controlStrength: Double? = nil,
+            negativeText: String? = nil
         ) {
             self.text = text
             self.conditionImage = conditionImage

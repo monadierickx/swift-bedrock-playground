@@ -25,7 +25,9 @@ public struct BedrockModel: Equatable, Hashable, Sendable, RawRepresentable {
     public let outputModality: [ModelModality]
 
     public init(
-        id: String, family: ModelFamily, inputModality: [ModelModality] = [.text],
+        id: String,
+        family: ModelFamily,
+        inputModality: [ModelModality] = [.text],
         outputModality: [ModelModality] = [.text]
     ) {
         self.id = id

@@ -24,7 +24,9 @@ struct BedrockRequest {
     private let body: BedrockBodyCodable
 
     private init(
-        model: BedrockModel, body: BedrockBodyCodable, contentType: String = "application/json",
+        model: BedrockModel,
+        body: BedrockBodyCodable,
+        contentType: String = "application/json",
         accept: String = "application/json"
     ) {
         self.model = model
@@ -35,13 +37,19 @@ struct BedrockRequest {
 
     // MARKIT: text
     static func createTextRequest(
-        model: BedrockModel, prompt: String, maxTokens: Int = 300, temperature: Double = 0.6
+        model: BedrockModel,
+        prompt: String,
+        maxTokens: Int = 300,
+        temperature: Double = 0.6
     ) throws -> BedrockRequest {
         try .init(model: model, prompt: prompt, maxTokens: maxTokens, temperature: temperature)
     }
 
     private init(
-        model: BedrockModel, prompt: String, maxTokens: Int, temperature: Double
+        model: BedrockModel,
+        prompt: String,
+        maxTokens: Int,
+        temperature: Double
     ) throws {
         guard model.outputModality.contains(.text) else {
             throw SwiftBedrockError.invalidModel("Modality of \(model.id) is not text")
@@ -50,16 +58,28 @@ struct BedrockRequest {
         switch model.family {
         case .anthropic:
             body = AnthropicRequestBody(
-                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
         case .titan:
             body = TitanRequestBody(
-                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
         case .nova:
             body = NovaRequestBody(
-                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
         case .deepseek:
             body = DeepSeekRequestBody(
-                prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
         default:
             throw SwiftBedrockError.invalidModel(model.id)
         }
@@ -68,7 +88,9 @@ struct BedrockRequest {
 
     // MARKIT: text to image
     public static func createTextToImageRequest(
-        model: BedrockModel, prompt: String, nrOfImages: Int
+        model: BedrockModel,
+        prompt: String,
+        nrOfImages: Int
     ) throws -> BedrockRequest {
         try .init(model: model, prompt: prompt, nrOfImages: nrOfImages)
     }
@@ -79,7 +101,8 @@ struct BedrockRequest {
         }
         guard model.outputModality.contains(.image) else {
             throw SwiftBedrockError.invalidModel(
-                "Output modality of \(model.id) is not image")
+                "Output modality of \(model.id) is not image"
+            )
         }
         var body: BedrockBodyCodable
         switch model.family {
@@ -93,13 +116,21 @@ struct BedrockRequest {
 
     // MARKIT: image variation
     public static func createImageVariationRequest(
-        model: BedrockModel, prompt: String, image: String, similarity: Double, nrOfImages: Int
+        model: BedrockModel,
+        prompt: String,
+        image: String,
+        similarity: Double,
+        nrOfImages: Int
     ) throws -> BedrockRequest {
         try .init(model: model, prompt: prompt, image: image, similarity: similarity, nrOfImages: nrOfImages)
     }
 
     private init(
-        model: BedrockModel, prompt: String, image: String, similarity: Double, nrOfImages: Int
+        model: BedrockModel,
+        prompt: String,
+        image: String,
+        similarity: Double,
+        nrOfImages: Int
     ) throws {
         guard model.inputModality.contains(.text) else {
             throw SwiftBedrockError.invalidModel("Input modality of \(model.id) is not text")
@@ -109,14 +140,18 @@ struct BedrockRequest {
         }
         guard model.outputModality.contains(.image) else {
             throw SwiftBedrockError.invalidModel(
-                "Output modality of \(model.id) is not image")
+                "Output modality of \(model.id) is not image"
+            )
         }
         var body: BedrockBodyCodable
         switch model.family {
         case .titan, .nova:
             body = AmazonImageRequestBody.imageVariation(
-                prompt: prompt, referenceImage: image, similarity: similarity,
-                nrOfImages: nrOfImages)
+                prompt: prompt,
+                referenceImage: image,
+                similarity: similarity,
+                nrOfImages: nrOfImages
+            )
         default:
             throw SwiftBedrockError.invalidModel(model.id)
         }
@@ -130,7 +165,8 @@ struct BedrockRequest {
                 accept: self.accept,
                 body: jsonData,
                 contentType: self.contentType,
-                modelId: model.id)
+                modelId: model.id
+            )
         } catch {
             throw SwiftBedrockError.encodingError(
                 "Something went wrong while encoding the request body to JSON for InvokeModelInput: \(error)"

@@ -15,7 +15,6 @@
 
 @preconcurrency import AWSBedrockRuntime
 import Foundation
-
 import SwiftBedrockTypes
 
 public struct BedrockResponse {

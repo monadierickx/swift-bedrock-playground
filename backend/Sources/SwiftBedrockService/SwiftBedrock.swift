@@ -36,7 +36,9 @@ public struct SwiftBedrock: Sendable {
     ) async throws {
         self.logger = logger ?? SwiftBedrock.createLogger("swiftbedrock.service")
         self.logger.trace(
-            "Initializing SwiftBedrock", metadata: ["region": .string(region.rawValue)])
+            "Initializing SwiftBedrock",
+            metadata: ["region": .string(region.rawValue)]
+        )
         self.region = region
 
         if bedrockClient != nil && bedrockRuntimeClient != nil {
@@ -46,17 +48,27 @@ public struct SwiftBedrock: Sendable {
         } else {
             self.logger.trace("Creating bedrockClient and bedrockRuntimeClient")
             self.bedrockClient = try await SwiftBedrock.createBedrockClient(
-                region: region, useSSO: useSSO)
+                region: region,
+                useSSO: useSSO
+            )
             self.logger.trace(
-                "Created bedrockRuntimeClient", metadata: ["useSSO": "\(useSSO)"])
+                "Created bedrockRuntimeClient",
+                metadata: ["useSSO": "\(useSSO)"]
+            )
             self.bedrockRuntimeClient = try await SwiftBedrock.createBedrockRuntimeClient(
-                region: region, useSSO: useSSO)
+                region: region,
+                useSSO: useSSO
+            )
             self.logger.trace(
-                "Created bedrockRuntimeClient", metadata: ["useSSO": "\(useSSO)"])
+                "Created bedrockRuntimeClient",
+                metadata: ["useSSO": "\(useSSO)"]
+            )
 
         }
         self.logger.trace(
-            "Initialized SwiftBedrock", metadata: ["region": .string(region.rawValue)])
+            "Initialized SwiftBedrock",
+            metadata: ["region": .string(region.rawValue)]
+        )
     }
 
     /// Creates Logger using either the loglevel saved as en environment variable `LOG_LEVEL` or with default `.trace`
@@ -70,11 +82,15 @@ public struct SwiftBedrock: Sendable {
     }
 
     /// Creates a BedrockClient
-    static private func createBedrockClient(region: Region, useSSO: Bool = false) async throws
+    static private func createBedrockClient(
+        region: Region,
+        useSSO: Bool = false
+    ) async throws
         -> MyBedrockClientProtocol
     {
         let clientConfig = try await BedrockClient.BedrockClientConfiguration(
-                region: region.rawValue)
+            region: region.rawValue
+        )
         if useSSO {
             clientConfig.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver()
         }
@@ -82,7 +98,10 @@ public struct SwiftBedrock: Sendable {
     }
 
     /// Creates a BedrockRuntimeClient // FIXME: clean-up
-    static private func createBedrockRuntimeClient(region: Region, useSSO: Bool = false)
+    static private func createBedrockRuntimeClient(
+        region: Region,
+        useSSO: Bool = false
+    )
         async throws
         -> MyBedrockRuntimeClientProtocol
     {
@@ -91,14 +110,16 @@ public struct SwiftBedrock: Sendable {
             let identityResolver = try SSOAWSCredentialIdentityResolver()
             let runtimeClientConfig =
                 try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                    region: region.rawValue)
+                    region: region.rawValue
+                )
             runtimeClientConfig.awsCredentialIdentityResolver = identityResolver
 
             bedrockRuntimeClient = BedrockRuntimeClient(config: runtimeClientConfig)
         } else {
             let defaultRuntimeResolver =
                 try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
-                    region: region.rawValue)
+                    region: region.rawValue
+                )
             bedrockRuntimeClient = BedrockRuntimeClient(config: defaultRuntimeResolver)
         }
         return bedrockRuntimeClient
@@ -110,11 +131,13 @@ public struct SwiftBedrock: Sendable {
     public func listModels() async throws -> [ModelInfo] {
         logger.trace("Fetching foundation models")
         let response = try await bedrockClient.listFoundationModels(
-            input: ListFoundationModelsInput())
+            input: ListFoundationModelsInput()
+        )
         guard let models = response.modelSummaries else {
             logger.info("Failed to extract modelSummaries from response")
             throw SwiftBedrockError.invalidResponse(
-                "Something went wrong while extracting the modelSummaries from the response.")
+                "Something went wrong while extracting the modelSummaries from the response."
+            )
         }
         var modelsInfo: [ModelInfo] = []
         modelsInfo = models.compactMap { (model) -> ModelInfo? in
@@ -128,14 +151,16 @@ public struct SwiftBedrock: Sendable {
             return ModelInfo(
                 modelName: modelName,
                 providerName: providerName,
-                modelId: modelId)
+                modelId: modelId
+            )
         }
         logger.trace(
             "Fetched foundation models",
             metadata: [
                 "models.count": .stringConvertible(modelsInfo.count)
                 // "models.content": .stringConvertible(modelsInfo),
-            ])
+            ]
+        )
         return modelsInfo
     }
 
@@ -151,7 +176,10 @@ public struct SwiftBedrock: Sendable {
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a TextCompletion object containing the generated text from the model
     public func completeText(
-        _ text: String, with model: BedrockModel, maxTokens: Int? = nil, temperature: Double? = nil
+        _ text: String,
+        with model: BedrockModel,
+        maxTokens: Int? = nil,
+        temperature: Double? = nil
     ) async throws -> TextCompletion {
         logger.trace(
             "Generating text completion",
@@ -160,21 +188,28 @@ public struct SwiftBedrock: Sendable {
                 "model.family": .string(model.family.description),
                 "prompt": .string(text),
                 "maxTokens": .stringConvertible(maxTokens ?? "not defined"),
-            ])
+            ]
+        )
         let maxTokens = maxTokens ?? 300
         guard maxTokens >= 1 else {
             logger.debug(
-                "Invalid maxTokens", metadata: ["maxTokens": .stringConvertible(maxTokens)])
+                "Invalid maxTokens",
+                metadata: ["maxTokens": .stringConvertible(maxTokens)]
+            )
             throw SwiftBedrockError.invalidMaxTokens(
-                "MaxTokens should be at least 1. MaxTokens: \(maxTokens)")
+                "MaxTokens should be at least 1. MaxTokens: \(maxTokens)"
+            )
         }
 
         let temperature = temperature ?? 0.6
         guard temperature >= 0 && temperature <= 1 else {
             logger.debug(
-                "Invalid temperature", metadata: ["temperature": .stringConvertible(temperature)])
+                "Invalid temperature",
+                metadata: ["temperature": .stringConvertible(temperature)]
+            )
             throw SwiftBedrockError.invalidTemperature(
-                "Temperature should be a value between 0 and 1. Temperature: \(temperature)")
+                "Temperature should be a value between 0 and 1. Temperature: \(temperature)"
+            )
         }
 
         guard !text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
@@ -183,43 +218,54 @@ public struct SwiftBedrock: Sendable {
         }
 
         let request: BedrockRequest = try BedrockRequest.createTextRequest(
-            model: model, prompt: text, maxTokens: maxTokens, temperature: temperature)
+            model: model,
+            prompt: text,
+            maxTokens: maxTokens,
+            temperature: temperature
+        )
         let input: InvokeModelInput = try request.getInvokeModelInput()
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
                 "model": .string(model.id), "request": .string(String(describing: input)),
-            ])
+            ]
+        )
         do {
-        let response = try await self.bedrockRuntimeClient.invokeModel(input: input) // FIXME: how to best catch these error?
+            let response = try await self.bedrockRuntimeClient.invokeModel(input: input)  // FIXME: how to best catch these error?
 
-        // if let bodyString = String(data: response.body!, encoding: .utf8) {
-        //     logger.info("Body as String: \(bodyString)")
-        // }
+            // if let bodyString = String(data: response.body!, encoding: .utf8) {
+            //     logger.info("Body as String: \(bodyString)")
+            // }
 
-        logger.trace(
-            "Received response from invokeModel",
-            metadata: [
-                "model": .string(model.id), "response": .string(String(describing: response)),
-            ])
-        guard let responseBody = response.body else {
-            logger.debug(
-                "Invalid response",
+            logger.trace(
+                "Received response from invokeModel",
                 metadata: [
-                    "response": .string(String(describing: response)),
-                    "hasBody": .stringConvertible(response.body != nil),
-                ])
-            throw SwiftBedrockError.invalidResponse(
-                "Something went wrong while extracting body from response.")
-        }
-        let bedrockResponse: BedrockResponse = try BedrockResponse(
-            body: responseBody, model: model)
-        logger.trace(
-            "Generated text completion",
-            metadata: [
-                "model": .string(model.id), "response": .string(String(describing: bedrockResponse)),
-            ])
-        return try bedrockResponse.getTextCompletion()
+                    "model": .string(model.id), "response": .string(String(describing: response)),
+                ]
+            )
+            guard let responseBody = response.body else {
+                logger.debug(
+                    "Invalid response",
+                    metadata: [
+                        "response": .string(String(describing: response)),
+                        "hasBody": .stringConvertible(response.body != nil),
+                    ]
+                )
+                throw SwiftBedrockError.invalidResponse(
+                    "Something went wrong while extracting body from response."
+                )
+            }
+            let bedrockResponse: BedrockResponse = try BedrockResponse(
+                body: responseBody,
+                model: model
+            )
+            logger.trace(
+                "Generated text completion",
+                metadata: [
+                    "model": .string(model.id), "response": .string(String(describing: bedrockResponse)),
+                ]
+            )
+            return try bedrockResponse.getTextCompletion()
         } catch {
             logger.debug("Error: \(error)")
             throw error
@@ -236,7 +282,9 @@ public struct SwiftBedrock: Sendable {
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a ImageGenerationOutput object containing an array of generated images
     public func generateImage(
-        _ prompt: String, with model: BedrockModel, nrOfImages: Int? = nil
+        _ prompt: String,
+        with model: BedrockModel,
+        nrOfImages: Int? = nil
     ) async throws -> ImageGenerationOutput {
         logger.trace(
             "Generating image(s)",
@@ -245,14 +293,18 @@ public struct SwiftBedrock: Sendable {
                 "model.family": .string(model.family.description),
                 "prompt": .string(prompt),
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
-            ])
+            ]
+        )
 
         let nrOfImages = nrOfImages ?? 3
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
-                "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
+                "Invalid nrOfImages",
+                metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
+            )
             throw SwiftBedrockError.invalidNrOfImages(
-                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)")
+                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)"
+            )
         }
 
         guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
@@ -261,13 +313,17 @@ public struct SwiftBedrock: Sendable {
         }
 
         let request: BedrockRequest = try BedrockRequest.createTextToImageRequest(
-            model: model, prompt: prompt, nrOfImages: nrOfImages)
+            model: model,
+            prompt: prompt,
+            nrOfImages: nrOfImages
+        )
         let input: InvokeModelInput = try request.getInvokeModelInput()
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
                 "model": .string(model.id), "request": .string(String(describing: input)),
-            ])
+            ]
+        )
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
             logger.debug(
@@ -275,14 +331,18 @@ public struct SwiftBedrock: Sendable {
                 metadata: [
                     "response": .string(String(describing: response)),
                     "hasBody": .stringConvertible(response.body != nil),
-                ])
+                ]
+            )
             throw SwiftBedrockError.invalidResponse(
-                "Something went wrong while extracting body from response.")
+                "Something went wrong while extracting body from response."
+            )
         }
 
         let decoder = JSONDecoder()
         let output: ImageGenerationOutput = try decoder.decode(
-            ImageGenerationOutput.self, from: responseBody)
+            ImageGenerationOutput.self,
+            from: responseBody
+        )
 
         logger.trace(
             "Generated image(s)",
@@ -290,7 +350,8 @@ public struct SwiftBedrock: Sendable {
                 "model": .string(model.id),
                 "response": .string(String(describing: response)),
                 "images.count": .stringConvertible(output.images.count),
-            ])
+            ]
+        )
         return output
     }
 
@@ -306,7 +367,10 @@ public struct SwiftBedrock: Sendable {
     ///           SwiftBedrockError.invalidResponse if the response body is missing
     /// - Returns: a ImageGenerationOutput object containing an array of generated images
     public func editImage(
-        image: String, prompt: String, with model: BedrockModel, similarity: Double? = nil,
+        image: String,
+        prompt: String,
+        with model: BedrockModel,
+        similarity: Double? = nil,
         nrOfImages: Int? = nil
     ) async throws -> ImageGenerationOutput {
         logger.trace(
@@ -317,22 +381,29 @@ public struct SwiftBedrock: Sendable {
                 "prompt": .string(prompt),
                 "nrOfImages": .stringConvertible(nrOfImages ?? "not defined"),
                 "similarity": .stringConvertible(similarity ?? "not defined"),
-            ])
+            ]
+        )
 
         let nrOfImages = nrOfImages ?? 3
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
             logger.debug(
-                "Invalid nrOfImages", metadata: ["nrOfImages": .stringConvertible(nrOfImages)])
+                "Invalid nrOfImages",
+                metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
+            )
             throw SwiftBedrockError.invalidNrOfImages(
-                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)")
+                "NrOfImages should be between 1 and 5. nrOfImages: \(nrOfImages)"
+            )
         }
 
         let similarity = similarity ?? 0.5
         guard similarity >= 0 && similarity <= 1 else {
             logger.debug(
-                "Invalid similarity", metadata: ["similarity": .stringConvertible(similarity)])
+                "Invalid similarity",
+                metadata: ["similarity": .stringConvertible(similarity)]
+            )
             throw SwiftBedrockError.invalidNrOfImages(
-                "Similarity should be between 0 and 1. similarity: \(similarity)")
+                "Similarity should be between 0 and 1. similarity: \(similarity)"
+            )
         }
 
         guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
@@ -341,14 +412,19 @@ public struct SwiftBedrock: Sendable {
         }
 
         let request: BedrockRequest = try BedrockRequest.createImageVariationRequest(
-            model: model, prompt: prompt, image: image, similarity: similarity,
-            nrOfImages: nrOfImages)
+            model: model,
+            prompt: prompt,
+            image: image,
+            similarity: similarity,
+            nrOfImages: nrOfImages
+        )
         let input: InvokeModelInput = try request.getInvokeModelInput()
         logger.trace(
             "Sending request to invokeModel",
             metadata: [
                 "model": .string(model.id), "request": .string(String(describing: input)),
-            ])
+            ]
+        )
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
             logger.debug(
@@ -356,14 +432,18 @@ public struct SwiftBedrock: Sendable {
                 metadata: [
                     "response": .string(String(describing: response)),
                     "hasBody": .stringConvertible(response.body != nil),
-                ])
+                ]
+            )
             throw SwiftBedrockError.invalidResponse(
-                "Something went wrong while extracting body from response.")
+                "Something went wrong while extracting body from response."
+            )
         }
 
         let decoder = JSONDecoder()
         let output: ImageGenerationOutput = try decoder.decode(
-            ImageGenerationOutput.self, from: responseBody)
+            ImageGenerationOutput.self,
+            from: responseBody
+        )
 
         logger.trace(
             "Generated image(s)",
@@ -371,7 +451,8 @@ public struct SwiftBedrock: Sendable {
                 "model": .string(model.id),
                 "response": .string(String(describing: response)),
                 "images.count": .stringConvertible(output.images.count),
-            ])
+            ]
+        )
         return output
     }
 }
