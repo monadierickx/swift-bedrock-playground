@@ -17,8 +17,7 @@ jobs:
       # https://github.com/actions/checkout/issues/1487
       - name: Manually Clone repository
         run: |
-          git clone https://github.com/${{ github.repository }}
-          cd ${{ github.event.repository.name }}
+          git clone https://github.com/${{ github.repository }} .
       - name: Build
         working-directory: backend
         run: swift build
@@ -36,7 +35,7 @@ jobs:
         git clone https://github.com/${{ github.repository }}
         cd ${{ github.event.repository.name }}
     - name: Run tests
-      working-directory: backend
+      working-directory: ${{ github.event.repository.name }}/backend
       run: swift test
   
   # soundness:
