@@ -48,6 +48,6 @@ jobs:
       api_breakage_check_enabled: false
       # api_breakage_check_container_image: "swift:6.0.3-amazonlinux2"
       # docs_check_enabled: false
-      docs_check_container_image: "swift:6.0.3-amazonlinux2"
+      docs_check_container_image: "swift:6.0-noble"
       format_check_container_image: "swiftlang/swift:nightly-6.0-jammy"
       yamllint_check_enabled: true
