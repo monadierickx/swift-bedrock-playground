@@ -5,7 +5,7 @@ import GlobalConfig from "@/app/app.config"
 import TextModelSelector from "./TextModelSelector";
 import Textarea from "./Textarea";
 import { defaultModel, defaultPayload } from "@/helpers/modelData";
-import NumericInput from "./NumericInput";
+import NumericInput from "../NumericInput";
 
 export default function TextContainer() {
     const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +59,7 @@ export default function TextContainer() {
             });
 
             const response = await fetch(api, {
-                method: 'POST', // FIXME: are we sure about POST? 
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
                 body: body
             });

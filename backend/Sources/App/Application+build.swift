@@ -45,7 +45,7 @@ public func buildApplication(
         arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap {
             Logger.Level(rawValue: $0)
         } ?? .info
-    let router = try await buildRouter(useSSO: arguments.sso)
+    let router = try await buildRouter(useSSO: arguments.sso, logger: logger)
     let app = Application(
         router: router,
         configuration: .init(
@@ -58,7 +58,7 @@ public func buildApplication(
 }
 
 /// Build router
-func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
+func buildRouter(useSSO: Bool, logger: Logger) async throws -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
 
     // CORS
@@ -108,7 +108,10 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
                 temperature: input.temperature
             )
         } catch {
-            // print(error)  // use logger from HB -> no access here
+            logger.info(
+                "An error occured while generating text",
+                metadata: ["url": "/foundation-models/text/:modelId", "error": "\(error)"]
+            )
             throw error
         }
     }
@@ -127,28 +130,46 @@ func buildRouter(useSSO: Bool) async throws -> Router<AppRequestContext> {
             let input = try await request.decode(as: ImageGenerationInput.self, context: context)
 
             var output: ImageGenerationOutput
-            if input.referenceImagePath == nil {
-                output = try await bedrock.generateImage(input.prompt, with: model)
+            if input.referenceImage == nil {
+                output = try await bedrock.generateImage(input.prompt, with: model, nrOfImages: input.nrOfImages)
             } else {
-                let referenceImage = try getImageAsBase64(
-                    filePath: input.referenceImagePath!
-                )
+                let referenceImage = input.referenceImage!.base64EncodedString()
                 output = try await bedrock.editImage(
                     image: referenceImage,
                     prompt: input.prompt,
-                    with: model
+                    with: model,
+                    similarity: input.similarity,
+                    nrOfImages: input.nrOfImages
                 )
             }
-            // tmp: save an image to disk to check
-            let timeStamp = getTimestamp()
-            try savePNGToDisk(
-                data: output.images[0],
-                filePath:
-                    "./img/generated_images/\(timeStamp).png"
-            )
             return output
         } catch {
-            // print(error)
+            logger.info(
+                "An error occured while generating image",
+                metadata: ["url": "/foundation-models/image/:modelId", "error": "\(error)"]
+            )
+            throw error
+        }
+    }
+
+    // POST /foundation-models/chat/{modelId}
+    router.post("/foundation-models/chat/:modelId") { request, context -> String in
+        do {
+            guard let modelId = context.parameters.get("modelId") else {
+                throw HTTPError(.badRequest, message: "No modelId found.")
+            }
+            guard let model = BedrockModel(rawValue: modelId),
+                model.inputModality.contains(.text)
+            else {
+                throw HTTPError(.badRequest, message: "Invalid modelId: \(modelId).")
+            }
+            let input = try await request.decode(as: ChatInput.self, context: context)
+            return try await bedrock.converse(with: model, prompt: input.prompt)
+        } catch {
+            logger.info(
+                "An error occured while generating chat",
+                metadata: ["url": "/foundation-models/chat/:modelId", "error": "\(error)"]
+            )
             throw error
         }
     }

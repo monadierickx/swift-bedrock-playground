@@ -30,7 +30,6 @@ struct SwiftBedrockServiceTests {
     }
 
     // MARK: listModels
-
     @Test("List all models")
     func listModels() async throws {
         let models = try await bedrock.listModels()
@@ -418,6 +417,35 @@ struct SwiftBedrockServiceTests {
                 prompt: prompt,
                 with: BedrockModel.nova_canvas,
                 similarity: 0.6
+            )
+        }
+    }
+    
+    // MARK: converse
+    
+    @Test(
+        "Continue conversation using a valid prompt",
+        arguments: [
+            "This is a test", "!@#$%^&*()_+{}|:<>?", String(repeating: "test ", count: 1000),
+        ]
+    )
+    func converseWithValidPrompt(prompt: String) async throws {
+        let output: String = try await bedrock.converse(
+            with: BedrockModel.nova_micro,
+            prompt: prompt
+        )
+        #expect(output == "Your prompt was: \(prompt)")
+    }
+    
+    @Test(
+        "Continue conversation variation using an invalid prompt",
+        arguments: ["", " ", " \n  ", "\t"]
+    )
+    func converseWithInvalidPrompt(prompt: String) async throws {
+        await #expect(throws: SwiftBedrockError.self) {
+            let _: String = try await bedrock.converse(
+                with: BedrockModel.nova_micro,
+                prompt: prompt
             )
         }
     }

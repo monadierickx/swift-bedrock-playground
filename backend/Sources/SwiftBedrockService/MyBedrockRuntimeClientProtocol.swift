@@ -21,6 +21,7 @@ import SwiftBedrockTypes
 
 public protocol MyBedrockRuntimeClientProtocol: Sendable {
     func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput
+    func converse(input: ConverseInput) async throws -> ConverseOutput
 }
 
 extension BedrockRuntimeClient: @retroactive @unchecked Sendable, MyBedrockRuntimeClientProtocol {}

@@ -84,7 +84,7 @@ In the `backend/Sources/SwiftBedrockTypes/DeepSeek/DeepSeekBedrockModels.swift` 
 import Foundation
 
 public extension BedrockModel {
-    static let deepseek_r1_v1: BedrockModel = BedrockModel(id: "deepseek.r1-v1:0", family: .deepseek)
+    static let deepseek_r1_v1: BedrockModel = BedrockModel(id: "us.deepseek.r1-v1:0", family: .deepseek)
 }
 ```
 
@@ -112,36 +112,29 @@ public init?(rawValue: String) {
 In the `backend/Sources/SwiftBedrockTypes/DeepSeek/DeepSeekRequestBody.swift` file create a struct that reflects exactly how the body of the request for an invokeModel call to this family should look. For the DeepSeek a request looks like this: 
 ```json
 {
-    "inferenceConfig": {
-        "max_tokens": 512
-    },
-    "messages": [
-        {
-        "role": "user",
-        "content": "this is where you place your input text"
-        }
-    ]
+    "prompt": "\(prompt)",
+    "temperature": 1, 
+    "top_p": 0.9,
+    "max_tokens": 200,
+    "stop": ["END"]
 }
 ```
 This means the `DeepSeekRequestBody` will be defined like so: 
 
 ```swift
 public struct DeepSeekRequestBody: BedrockBodyCodable {
-    let inferenceConfig: InferenceConfig
-    let messages: [Message]
+    let prompt: String
+    let temperature: Double
+    let top_p: Double
+    let max_tokens: Int
+    let stop: [String]
 
     public init(prompt: String, maxTokens: Int, temperature: Double) {
-        self.inferenceConfig = InferenceConfig(max_tokens: maxTokens)
-        self.messages = [Message(role: .user, content: prompt)]
-    }
-
-    struct InferenceConfig: Codable {
-        let max_tokens: Int
-    }
-
-    struct Message: Codable {
-        let role: Role
-        let content: String
+        self.prompt = prompt
+        self.temperature = temperature
+        self.top_p = 0.9
+        self.max_tokens = maxTokens
+        self.stop = ["END"]
     }
 }
 ```
@@ -149,7 +142,86 @@ public struct DeepSeekRequestBody: BedrockBodyCodable {
 Make sure to add the public initializer with parameters `prompt`, `maxTokens` and `temperature` to comply to the `BedrockBodyCodable` protocol. 
 
 ### 6. Create `DeepSeekResponseBody`
+Based on the structure of the response body the `DeekSeekResponseBody` struct has to be created. 
+```json
+{
+    "choices":
+        [
+            {
+                "text":"completion",
+                "stop_reason":"length"
+            }
+        ]
+}
+```
 
+```swift
+public struct DeepSeekResponseBody: ContainsTextCompletion {
+    let choices: [Choice]
+
+    struct Choice: Codable {
+        let text: String
+        let stop_reason: String
+    }
+
+    public func getTextCompletion() throws -> TextCompletion {
+        TextCompletion(self.choices[0].text)
+    }
+}
+```
+
+Make sure to add the `getTextCompletion` method to extract the completion from the response body and to comply to the `ContainsTextCompletion` protocol.
 
 ### 7. Add request and response body to `BedrockRequest` and to `BedrockResponse` respectively
 
+In `backend/Sources/SwiftBedrockService/BedrockRequest.swift` add the new model family to the correct private initializer. In this case, as the family only contains one model that only does text completion, only one initializer has to be adapted
+
+```swift
+private init(
+    model: BedrockModel,
+    prompt: String,
+    maxTokens: Int,
+    temperature: Double
+) throws {
+    // ... 
+    switch model.family {
+    
+    // Add this code
+    case .deepseek:
+        body = DeepSeekRequestBody(
+            prompt: prompt,
+            maxTokens: maxTokens,
+            temperature: temperature
+        )
+    
+    // ...
+    default:
+        throw SwiftBedrockError.invalidModel(model.id)
+    }
+    self.init(model: model, body: body)
+}
+```
+
+In `backend/Sources/SwiftBedrockService/BedrockResponse.swift` add the new model family to the switch statement.
+
+```swift
+public init(body data: Data, model: BedrockModel) throws {
+    do {
+        var body: ContainsTextCompletion
+        let decoder = JSONDecoder()
+        switch model.family {
+        
+        // Add this code
+        case .deepseek:
+            body = try decoder.decode(DeepSeekResponseBody.self, from: data)
+        
+        // ... 
+        default:
+            throw SwiftBedrockError.invalidModel(model.id)
+        }
+        self.init(model: model, body: body)
+    } catch {
+        throw SwiftBedrockError.invalidResponseBody(data)
+    }
+}
+```

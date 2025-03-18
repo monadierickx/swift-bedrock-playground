@@ -26,21 +26,54 @@ struct TextCompletionInput: Codable {
     let temperature: Double?
 }
 
+struct ChatInput: Codable {
+    let prompt: String
+    // let history: [BedrockRuntimeClientTypes.Message] = []
+}
+
 struct ImageGenerationInput: Codable {
     let prompt: String
+    let nrOfImages: Int?
     let stylePreset: String?
-    let referenceImagePath: String?
+    let referenceImage: Data?
+    let similarity: Double?
 
-    init(prompt: String, stylePreset: String? = "") {
+    // static func createImageGenerationInput(
+    //     prompt: String,
+    //     nrOfImages: Int? = 1,
+    //     stylePreset: String? = ""
+    // ) throws -> Self {
+    //     .init(prompt: prompt, nrOfImages: nrOfImages, stylePreset: stylePreset)
+    // }
+
+    // static func createImageVariationInput(
+    //     prompt: String,
+    //     nrOfImages: Int? = 1,
+    //     referenceImage: Data? = nil,
+    //     similarity: Double? = nil,
+    //     stylePreset: String? = ""
+    // ) throws -> Self {
+    //     .init(
+    //         prompt: prompt,
+    //         nrOfImages: nrOfImages,
+    //         referenceImage: referenceImage,
+    //         similarity: similarity,
+    //         stylePreset: stylePreset
+    //     )
+    // }
+
+    init(
+        prompt: String,
+        nrOfImages: Int? = 1,
+        referenceImage: Data? = nil,
+        similarity: Double? = nil,
+        stylePreset: String? = ""
+    ) {
         self.prompt = prompt
         self.stylePreset = stylePreset
-        self.referenceImagePath = nil
-    }
-
-    init(prompt: String, referenceImagePath: String) {
-        self.prompt = prompt
-        self.stylePreset = ""
-        self.referenceImagePath = referenceImagePath
+        self.referenceImage = referenceImage
+        self.nrOfImages = nrOfImages
+        self.similarity = similarity
     }
 }
 

@@ -132,6 +132,20 @@ export const models = [
             default: 200
         }
     },
+    {
+        modelName: "Deep Seek",
+        modelId: "us.deepseek.r1-v1:0",
+        temperatureRange: {
+            min: 0,
+            max: 1,
+            default: 0.5
+        },
+        maxTokenRange: {
+            min: 0,
+            max: 8191,
+            default: 200
+        }
+    },
 ]
 
 export const defaultPayload = {

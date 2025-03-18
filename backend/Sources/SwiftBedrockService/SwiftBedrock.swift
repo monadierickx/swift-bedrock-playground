@@ -39,6 +39,7 @@ public struct SwiftBedrock: Sendable {
     /// - Throws: Error if client initialization fails
     public init(
         region: Region = .useast1,
+        // region: Region = .uswest2,
         logger: Logger? = nil,
         bedrockClient: MyBedrockClientProtocol? = nil,
         bedrockRuntimeClient: MyBedrockRuntimeClientProtocol? = nil,
@@ -87,7 +88,7 @@ public struct SwiftBedrock: Sendable {
     static private func createLogger(_ name: String) -> Logger {
         var logger: Logger = Logger(label: name)
         logger.logLevel =
-            ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
+            ProcessInfo.processInfo.environment["SWIFT_BEDROCK_LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
             } ?? .trace  // FIXME: trace for me, later .info
         return logger
@@ -130,7 +131,7 @@ public struct SwiftBedrock: Sendable {
     /// Validate maxTokens is at least 1
     private func validateMaxTokens(_ maxTokens: Int) throws {
         guard maxTokens >= 1 else {
-            logger.debug(
+            logger.trace(
                 "Invalid maxTokens",
                 metadata: ["maxTokens": .stringConvertible(maxTokens)]
             )
@@ -143,7 +144,7 @@ public struct SwiftBedrock: Sendable {
     /// Validate temperature is between 0 and 1
     private func validateTemperature(_ temperature: Double) throws {
         guard temperature >= 0 && temperature <= 1 else {
-            logger.debug(
+            logger.trace(
                 "Invalid temperature",
                 metadata: ["temperature": "\(temperature)"]
             )
@@ -156,7 +157,7 @@ public struct SwiftBedrock: Sendable {
     /// Validate prompt is not empty and does not consist of only whitespaces, tabs or newlines
     private func validatePrompt(_ prompt: String) throws {
         guard !prompt.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
-            logger.debug("Invalid prompt", metadata: ["prompt": .string(prompt)])
+            logger.trace("Invalid prompt", metadata: ["prompt": .string(prompt)])
             throw SwiftBedrockError.invalidPrompt("Prompt is not allowed to be empty.")
         }
     }
@@ -164,7 +165,7 @@ public struct SwiftBedrock: Sendable {
     /// Validate nrOfImages is between 1 and 5
     private func validateNrOfImages(_ nrOfImages: Int) throws {
         guard nrOfImages >= 1 && nrOfImages <= 5 else {
-            logger.debug(
+            logger.trace(
                 "Invalid nrOfImages",
                 metadata: ["nrOfImages": .stringConvertible(nrOfImages)]
             )
@@ -177,7 +178,7 @@ public struct SwiftBedrock: Sendable {
     /// Validate similarity is between 1 and 5
     private func validateSimilarity(_ similarity: Double) throws {
         guard similarity >= 0 && similarity <= 1 else {
-            logger.debug(
+            logger.trace(
                 "Invalid similarity",
                 metadata: ["similarity": .stringConvertible(similarity)]
             )
@@ -209,7 +210,7 @@ public struct SwiftBedrock: Sendable {
                 let providerName = model.providerName,
                 let modelName = model.modelName
             else {
-                logger.debug("Skipping model due to missing required properties")
+                logger.trace("Skipping model due to missing required properties")
                 return nil
             }
             return ModelInfo(
@@ -279,9 +280,9 @@ public struct SwiftBedrock: Sendable {
             )
             let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
 
-            // if let bodyString = String(data: response.body!, encoding: .utf8) {
-            //     logger.info("Body as String: \(bodyString)")
-            // }
+            if let bodyString = String(data: response.body!, encoding: .utf8) {
+                logger.info("Body as String: \(bodyString)")
+            }
 
             logger.trace(
                 "Received response from invokeModel",
@@ -290,7 +291,7 @@ public struct SwiftBedrock: Sendable {
                 ]
             )
             guard let responseBody = response.body else {
-                logger.debug(
+                logger.trace(
                     "Invalid response",
                     metadata: [
                         "response": .string(String(describing: response)),
@@ -313,7 +314,7 @@ public struct SwiftBedrock: Sendable {
             )
             return try bedrockResponse.getTextCompletion()
         } catch {
-            logger.debug("Error while completing text", metadata: ["error": "\(error)"])
+            logger.trace("Error while completing text", metadata: ["error": "\(error)"])
             throw error
         }
     }
@@ -360,7 +361,7 @@ public struct SwiftBedrock: Sendable {
         )
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
-            logger.debug(
+            logger.trace(
                 "Invalid response",
                 metadata: [
                     "response": .string(String(describing: response)),
@@ -442,7 +443,7 @@ public struct SwiftBedrock: Sendable {
         )
         let response = try await self.bedrockRuntimeClient.invokeModel(input: input)
         guard let responseBody = response.body else {
-            logger.debug(
+            logger.trace(
                 "Invalid response",
                 metadata: [
                     "response": .string(String(describing: response)),
@@ -469,5 +470,47 @@ public struct SwiftBedrock: Sendable {
             ]
         )
         return output
+    }
+
+    /// tmp
+    public func converse(
+        with model: BedrockModel,
+        prompt: String,
+        history: [BedrockRuntimeClientTypes.Message] = []
+    ) async throws -> String {
+        logger.trace(
+            "Conversing",
+            metadata: [
+                "model.id": .string(model.id),
+                "model.family": .string(model.family.description),
+                "prompt": .string(prompt),
+            ]
+        )
+        try validatePrompt(prompt)
+        var messages = history
+        messages.append(
+            BedrockRuntimeClientTypes.Message(
+                content: [.text(prompt)],
+                role: .user
+            )
+        )
+        logger.trace("Created messages", metadata: ["messages.count": "\(messages.count)"])
+        let input = ConverseInput(messages: messages, modelId: model.id)
+        logger.trace(
+            "Created ConverseInput",
+            metadata: ["messages.count": "\(messages.count)", "model": "\(model.description)"]
+        )
+        let response = try await self.bedrockRuntimeClient.converse(input: input)
+        logger.trace("Received response", metadata: ["response": "\(response)"])
+
+        if case let .message(msg) = response.output {
+            logger.trace("Extracted message", metadata: ["message": "\(msg)"])
+            if case let .text(reply) = msg.content![0] {
+                logger.trace("Extracted reply", metadata: ["reply": "\(reply)"])
+                return reply
+            }
+        }
+        logger.trace("Not good")
+        return "Oeps"
     }
 }

@@ -23,6 +23,24 @@ import SwiftBedrockTypes
 public struct MockBedrockRuntimeClient: MyBedrockRuntimeClientProtocol {
     public init() {}
 
+    // MARK: converse
+    public func converse(input: ConverseInput) async throws -> ConverseOutput {
+        guard let messages = input.messages,
+            let content = messages.first?.content?.first,
+            case let .text(prompt) = content
+        else {
+            throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
+        }
+
+        let message = BedrockRuntimeClientTypes.Message(
+            content: [.text("Your prompt was: \(prompt)")],
+            role: .assistant
+        )
+        return ConverseOutput(output: .message(message))
+    }
+
+    // MARK: invokeModel
+
     public func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput {
         guard let modelId = input.modelId else {
             throw AWSBedrockRuntime.ValidationException(

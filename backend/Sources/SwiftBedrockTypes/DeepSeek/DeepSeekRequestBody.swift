@@ -16,20 +16,17 @@
 import Foundation
 
 public struct DeepSeekRequestBody: BedrockBodyCodable {
-    let inferenceConfig: InferenceConfig
-    let messages: [Message]
+    let prompt: String
+    let temperature: Double
+    let top_p: Double
+    let max_tokens: Int
+    let stop: [String]
 
     public init(prompt: String, maxTokens: Int, temperature: Double) {
-        self.inferenceConfig = InferenceConfig(max_tokens: maxTokens)
-        self.messages = [Message(role: .user, content: prompt)]
-    }
-
-    struct InferenceConfig: Codable {
-        let max_tokens: Int
-    }
-
-    struct Message: Codable {
-        let role: Role
-        let content: String
+        self.prompt = prompt
+        self.temperature = temperature
+        self.top_p = 0.9
+        self.max_tokens = maxTokens
+        self.stop = ["END"]
     }
 }
