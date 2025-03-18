@@ -420,9 +420,9 @@ struct SwiftBedrockServiceTests {
             )
         }
     }
-    
+
     // MARK: converse
-    
+
     @Test(
         "Continue conversation using a valid prompt",
         arguments: [
@@ -436,7 +436,7 @@ struct SwiftBedrockServiceTests {
         )
         #expect(output == "Your prompt was: \(prompt)")
     }
-    
+
     @Test(
         "Continue conversation variation using an invalid prompt",
         arguments: ["", " ", " \n  ", "\t"]
